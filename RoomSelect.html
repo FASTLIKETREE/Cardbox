@@ -1,0 +1,99 @@
+<html>
+<head>
+
+    <meta charset="utf-8"/>
+    <title>Demo</title>
+	<style type="text/css">
+</style>
+
+
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
+
+<script>
+
+$(document).ready(function(){
+	var rooms = 9
+	socket = io.connect();
+	socket.emit("JoinLobby")
+	/*
+	var user = prompt("Enter your name, or don't")
+	while(1)
+	{
+		if(user == null)
+		{
+			user = prompt("Enter your name, or don't")
+		}
+		else
+		{
+			break
+		}
+	}
+	*/
+
+
+
+	socket.on("RoomCounters", function(data){
+		console.log(data)
+
+		for(var i = 0; i < rooms; ++i)
+		{
+			if(("/room" + i) in data)
+			{
+				console.log("WHAT IS WGOINW:GOK E:LKGJ W:LEKJG:LKWE")
+				document.getElementById("room"+i).innerHTML="Players:" + data["/room" + i].length
+			}
+			else
+			{
+				document.getElementById("room"+i).innerHTML="Players:0"
+			}
+		}
+
+	})
+
+	for(i = 0; i < rooms; ++i)
+	{
+		var cardsButtonView = document.createElement("button");
+		cardsButtonView.style.position = "absolute"
+		cardsButtonView.style.left = i%3*100 + "px"
+		cardsButtonView.style.top = Math.floor(i/3)*130 + 30 + "px"
+		cardsButtonView.style.height = "100px"
+		cardsButtonView.style.width = "100px"
+
+		var buttonTextView = document.createTextNode("Room "+i)
+		cardsButtonView.appendChild(buttonTextView)
+		document.body.appendChild(cardsButtonView);
+
+		cardsButtonView.onclick = (function(i){
+		return function(){
+		//socket.emit("JoinRoom", {"room":i, "user":user})
+			socket.emit("JoinRoom", {"room":i})
+			window.location = "/game"}
+		})(i)
+
+		var RoomCounter = document.createElement('div');
+		RoomCounter.style.position = "absolute"
+		RoomCounter.style.left = i%3*100 + "px"
+		RoomCounter.style.top = Math.floor(i/3)*130 + "px"
+		RoomCounter.setAttribute("id", "room" +i)
+		var DivText = document.createTextNode("")
+		RoomCounter.appendChild(DivText)
+		document.body.appendChild(RoomCounter);
+	}
+})
+
+Object.size = function(obj) {
+    var size = 0, key;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) size++;
+    }
+    return size;
+};
+
+</script>
+</head>
+
+<body class="advanced">
+</body>
+</html>
