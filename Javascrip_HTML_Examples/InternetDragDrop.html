@@ -1,0 +1,58 @@
+<html>
+  <head>
+    <style>
+      html,body {
+        height:100%;
+      }
+    </style>
+
+
+    <script type="text/javascript">
+      var omnaEl,dragData=null;
+      function window_onload() {
+        omnaEl=document.getElementById("omna")
+        if(window.addEventListener) {
+           omnaEl.addEventListener('mousedown',startDrag,false);
+           document.body.addEventListener('mousemove',drag,false);
+           document.body.addEventListener('mouseup',stopDrag,false);
+        }
+        else if(window.attachEvent) {
+           omnaEl.attachEvent('onmousedown',startDrag);
+           document.body.attachEvent('onmousemove',drag);
+           document.body.attachEvent('onmouseup',stopDrag);
+        }
+      }
+
+
+      function startDrag(ev) {
+        if(!dragData) {
+          ev=ev||event;
+          dragData={
+            x: ev.clientX-omnaEl.offsetLeft,
+            y: ev.clientY-omnaEl.offsetTop
+          };
+        };
+      }
+      function drag(ev) {
+        if(dragData) {
+          ev=ev||event;
+          omnaEl.style.left=ev.clientX-dragData.x+"px";
+          omnaEl.style.top=ev.clientY-dragData.y+"px";
+        }
+      }
+      function stopDrag(ev) {
+        if(dragData) {
+          ev=ev||event;
+          omnaEl.style.left=ev.clientX-dragData.x+"px";
+          omnaEl.style.top=ev.clientY-dragData.y+"px";
+          dragData=null;
+        }
+      }
+
+     </script>
+  </head>
+  <body onload='window_onload();'>
+    <img id="omna" src="http://t0.gstatic.com/images?q=tbn:ANd9GcRi-8XnnXwAZmz_5R5LHRHMNlnYYHCP4WqRdu6vhf_ru8wLK9XB3IrNrwix"
+        width="100px" height="100px" unselectable="on" style="position:absolute;user-select:none;-moz-user-select:none;-webkit-user-select:none;"/>
+  </body>
+</html>

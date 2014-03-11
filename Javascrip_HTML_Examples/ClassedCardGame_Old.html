@@ -1,0 +1,365 @@
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Demo</title>
+	<style type="text/css">
+</style>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
+<script>
+	socket = io.connect();
+	socket.on('date', function(data){
+	console.log(data.date)})
+
+	var ActiveDeckObject
+	var BoundDeckObject = 0
+	var ActiveCardObject
+	var NewlyCreatedDeckObject
+
+$(document).ready(function(){
+	//socket.emit('startDate', {'date': new Date()});
+	//<table border="1">
+	var DistanceYViewButton = 0
+	document.addEventListener("keydown", function(e)
+	{
+		//Delete Key
+                if(e.keyCode == 46)
+		{
+			if(BoundDeckObject)
+			{
+				BoundDeckObject.parentNode.removeChild(BoundDeckObject)
+				socket.emit("DeleteDeck", {"DeckID":BoundDeckObject.id})
+			}
+		}
+
+
+		if(e.keyCode == 8)
+		{
+			e.preventDefault()
+			if(ActiveCardObject)
+			{
+				ActiveCardObject.parentNode.removeChild(ActiveCardObject)
+				ActiveCardObject = 0
+			}
+		}
+
+		if(e.keyCode == 66)
+		{
+			//This is the draw key
+			//var image = new Image()
+			//image.style.position="absolute"
+			//alert(e.keyCode)
+			if(BoundDeckObject == 0)
+			{
+				BoundDeckObject = ActiveDeckObject
+				BoundDeckObject.removeEventListener("mouseleave", MouseLeave)
+				BoundDeckObject.removeEventListener("mouseenter", MouseEnter)
+				BoundDeckObject.style.border='2px solid #E8272C';
+			}
+
+			if(BoundDeckObject != ActiveDeckObject)
+			{
+				BoundDeckObject.addEventListener("mouseenter", MouseEnter, false)
+				BoundDeckObject.addEventListener("mouseleave", MouseLeave, false)
+				BoundDeckObject.style.border="";
+				BoundDeckObject = ActiveDeckObject
+
+				ActiveDeckObject.removeEventListener("mouseleave", MouseLeave)
+				ActiveDeckObject.removeEventListener("mouseenter", MouseEnter)
+				ActiveDeckObject.style.border='2px solid #E8272C';
+			}
+		}
+
+
+		if(e.keyCode == 68)
+		{
+			//This is the draw key
+			//var image = new Image()
+			//image.style.position="absolute"
+			socket.emit("DrawCard", {"DeckID":BoundDeckObject.id})
+		}
+
+
+	})
+
+	socket.on("DrawCard", function(data){
+		var image = new Image();
+		image.src = data.DrawCard
+		console.log(data.DrawCard)
+		image.style.position="absolute"
+		image.style.left = "300px"
+		image.style.top = "0px"
+		image.id = "Heyup"
+		image.setAttribute("class", "drag")
+		image.addEventListener("mouseenter", MouseEnterCard, false)
+		image.addEventListener("mouseleave", MouseLeaveCard, false)
+		document.body.appendChild(image)
+	})
+
+	socket.on("DeckID", function(data){
+		//NewlyCreatedDeckObject.id = data.ID
+		console.log("***********************")
+		NewlyCreatedDeckObject.id = data.ID
+		console.log(NewlyCreatedDeckObject)
+		console.log(data)
+		console.log(data.ID)
+		console.log("***********************")
+	})
+
+	socket.on('DecksDir', function(data){
+		for(var i = 0; i < data.length; i=i+1)
+		{
+
+			var cardsButtonView = document.createElement("button");
+			cardsButtonView.style.position="absolute"
+			cardsButtonView.style.left = "0px"
+			cardsButtonView.style.top = DistanceYViewButton + "px"
+			//DistanceYViewButton = DistanceYViewButton + 6
+
+			var cardsButtonCreate = document.createElement("button");
+			cardsButtonCreate.style.position="absolute"
+			cardsButtonCreate.style.left = "200px"
+			cardsButtonCreate.style.top = DistanceYViewButton + "px"
+
+			DistanceYViewButton = DistanceYViewButton + 6
+			//var text = ""
+
+			console.log(data + "<-- this is the split array")
+			console.log(data.length + "<-- this is the length")
+
+			if(Number(data[i]) > 0)
+			{
+
+				var buttonTextView = document.createTextNode("View_" + data[i-1])
+				var buttonTextCreate = document.createTextNode("Create_" + data[i-1])
+				cardsButtonView.appendChild(buttonTextView)
+				cardsButtonCreate.appendChild(buttonTextCreate)
+
+
+				var TextData = data[i-1]
+				var DeckNameString = data[i-1]
+				for(var j = 0; j < data[i]; ++j)
+				{
+					TextData = TextData + "," + data[i+j+1]
+				}
+
+
+				cardsButtonCreate.onclick=(function(namestring){
+					return function(){
+						//alert(socket)
+
+						var image = new Image();
+						image.src = "pictures/AnotherGroupOfCards/Deck.png"
+						image.style.position="absolute"
+						image.style.left = "300px"
+						image.style.top = "0px"
+						image.id = "Heyup"
+						image.setAttribute("class", "drag")
+						ActiveDeckObject = image
+						if(ActiveDeckObject)
+						{
+							ActiveDeckObject.style.border="";
+						}
+						NewlyCreatedDeckObject = image
+
+						image.addEventListener("mouseenter", MouseEnter, false)
+						image.addEventListener("mouseleave", MouseLeave, false)
+
+						socket.emit("CreateDeck", {'deck':namestring})
+						document.body.appendChild(image)
+					}
+				})(DeckNameString)
+
+				cardsButtonView.onclick = (function(namestring){
+					return function(){
+					console.log("This should emit something to the socket, i don't see it")
+					console.log(namestring + "<-- this is data i")
+					var NewWindow = window.open("", "MsgWindow", "height=200,width=200")
+					NewWindow.document.write("<html><head><title></title></head><body></body>");
+					CardsAndDeckArray = namestring.split(",")
+
+						for(var k = 1; k < CardsAndDeckArray.length; ++k)
+						{
+							var image = new Image();
+							console.log("pictures/" + CardsAndDeckArray[0] + "/" + CardsAndDeckArray[k] + "<-- this is the image source")
+							image.src = "pictures/" + CardsAndDeckArray[0] + "/" + CardsAndDeckArray[k];
+							NewWindow.document.body.appendChild(image)
+						}
+					}
+				})(TextData)
+
+				document.body.appendChild(cardsButtonView);
+				document.body.appendChild(cardsButtonCreate);
+			}
+		}
+	})
+
+	socket.emit("PopulateDecks")
+})
+
+/***********************************************
+* Drag and Drop Script: � Dynamic Drive (http://www.dynamicdrive.com)
+* This notice MUST stay intact for legal use
+* Visit http://www.dynamicdrive.com/ for this script and 100s more.
+***********************************************/
+
+
+var MouseLeaveCard = function(e)
+{
+	this.style.border=""
+	ActiveCardObject = 0
+}
+
+var MouseEnterCard = function(e)
+{
+	e.preventDefault()
+	ActiveCardObject = this
+	this.style.border='2px solid #0000FF';
+	console.log(ActiveDeckObject)
+}
+
+var MouseLeave = function(e)
+{
+	this.style.border=""
+}
+
+var MouseEnter = function(e)
+{
+	e.preventDefault()
+	ActiveDeckObject = this
+	this.style.border='2px solid #0000FF';
+	console.log(ActiveDeckObject)
+}
+
+function DrawCard(e, card, x, y)
+{
+   if(typeof(x)==='undefined') x = "100";
+   if(typeof(y)==='undefined') y = "100";
+
+	console.log(e + "<-- this is e")
+	console.log(card + "<-- this is the card")
+	var evtobj=window.event || e
+	//this.targetobj = e.target
+	console.log(evtobj.clientX + "<-- this is client X from drawcards function")
+
+	var laboratory = new Image();
+	laboratory.src= "pictures/" + card;
+	laboratory.onload = function() {
+	this.setAttribute("class", "drag")
+	laboratory.style.position = "absolute"
+	this.style.left = x
+	this.style.top = y
+	this.style.width = "150px"
+	document.body.appendChild(laboratory)
+	console.log(document.images.length + "<-- this is number of images?")
+	//document.images[0].parentNode.removeChild(document.images[0]);
+	}
+}
+
+
+
+
+Index = 0;
+var CardArray = new Array();
+CardArray[0] = "MagicWoodFarmBase/Laboratory.png"
+CardArray[1] = "MagicWoodFarmBase/Deck.png"
+
+window.onload=function(){
+var ElementId = document.getElementById("deckid");
+console.log("what is going wrong")
+ElementId.addEventListener("mousedown", function(e){
+DrawCard(e, CardArray[window.Index])
+window.Index = window.Index + 1
+}, false)
+}
+</script>
+
+</head>
+<body class="advanced">
+
+<div id=CounterX> some serious x </div>
+<div id=CounterY> some serious x </div>
+<div class=deck id=deckid> This is a deck </div>
+<div id="mydiv"></div>
+</form>
+<script>
+
+	var laboratory;
+	function loadImage(name, x, y)
+	{
+		var laboratory = new Image();
+		laboratory.src="pictures/" + name;
+		laboratory.onload = function() {
+		this.setAttribute("class", "drag")
+		laboratory.style.position = "absolute"
+		this.style.left = x
+		this.style.top = y
+		this.style.width = "150px"
+		document.body.appendChild(laboratory)
+
+		}
+	}
+	loadImage("MagicWoodFarmBase/Laboratory.png", 0, 100);
+	loadImage("MagicWoodFarmBase/Laboratory.png", 0 ,250);
+
+
+var dragobject={
+z: 0, x: 0, y: 0, offsetx : null, offsety : null, targetobj : null, dragapproved : 0,
+initialize:function(){
+document.onmousedown=this.drag
+document.onmouseup=function(){this.dragapproved=0}
+},
+drag:function(e){
+/*
+var evtobj=window.event? window.event : e
+this.targetobj=window.event? event.srcElement : e.target
+*/
+var evtobj=window.event || e
+this.targetobj=event.srcElement || e.target
+if (this.targetobj.className=="drag"){
+this.dragapproved=1
+/*
+if (isNaN(parseInt(this.targetobj.style.left))){this.targetobj.style.left=0}
+if (isNaN(parseInt(this.targetobj.style.top))){this.targetobj.style.top=0}
+*/
+
+//This sets the left and top of the image, where it is loaded on the page
+this.offsetx=parseInt(this.targetobj.style.left)
+console.log(this.offsetx + "<-- this is the offset x")
+this.offsety=parseInt(this.targetobj.style.top)
+console.log(this.offsety + "<-- this is the offset y")
+
+
+//The event object which is passed automatically to a function when bound to an event, like onmousedown
+// has x and y coordinantes of e.clientX and e.clientY, in this case e is evtobj which is a selection between the window.event, and the automatically passed variable, this is
+//a difference between IE and other browsers
+
+this.x=evtobj.clientX
+console.log(this.x + "<-- this is the clientx")
+this.y=evtobj.clientY
+console.log(this.y + "<-- this is the clienty\n")
+
+if (evtobj.preventDefault)
+evtobj.preventDefault()
+
+document.onmousemove=dragobject.moveit
+}
+},
+moveit:function(e){
+var evtobj=window.event? window.event : e
+if (this.dragapproved==1){
+this.targetobj.style.left=this.offsetx+evtobj.clientX-this.x+"px"
+this.targetobj.style.top=this.offsety+evtobj.clientY-this.y+"px"
+document.getElementById('CounterX').innerHTML = this.offsetx+evtobj.clientX-this.x+"px"
+document.getElementById('CounterY').innerHTML = this.offsety+evtobj.clientY-this.y+"px"
+return false
+}
+}
+}
+//deckobject.initialize()
+dragobject.initialize()
+
+</script>
+</body>
+</html>

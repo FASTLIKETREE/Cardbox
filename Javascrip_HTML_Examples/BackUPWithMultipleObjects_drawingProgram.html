@@ -1,0 +1,463 @@
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Demo</title>
+	<style type="text/css">
+</style>
+
+<script src="/socket.io/lib/socket.io.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
+
+
+<script>
+	socket = io.connect();
+	socket.emit("LogIPMain")
+
+	var HandWindow = 0
+	var ActiveDeckObject = 0
+	var BoundDeckObject = 0
+	var ActiveCardObject = 0
+	var ActiveHandObject = 0
+	var ActiveMovingObject = 0
+	var DecksAndCards = {}
+
+function deckobject(){
+	var self = this
+	this.id = null
+	var imageobject = new Image();
+
+	var mouseenter = {
+		handleEvent: function(){
+		ActiveDeckObject = self;
+		imageobject.style.border='2px solid #0000FF';
+		}
+	}
+
+	var mouseleave = {
+		handleEvent: function(){
+		imageobject.style.border=""
+		}
+	}
+
+	this.setborder = function(colorcode)
+	{
+		imageobject.style.border=colorcode;
+	}
+
+	this.removeMouseListeners = function(){
+		imageobject.removeEventListener("mouseenter", mouseenter)
+		imageobject.removeEventListener("mouseleave", mouseleave)
+	}
+
+	this.addMouseListeners = function(){
+		imageobject.addEventListener("mouseenter", mouseenter, false)
+		imageobject.addEventListener("mouseleave", mouseleave, false)
+	}
+
+	this.createdeck = function(namestring)
+	{
+		//var image = new Image();
+		imageobject.src = "pictures/AnotherGroupOfCards/Deck.png"
+		imageobject.style.position="absolute"
+		imageobject.style.left = "300px"
+		imageobject.style.top = "0px"
+		imageobject.setAttribute("class", "drag")
+		//imageobject.setAttribute("longDesc", this.id)
+		imageobject.DeckID = this.id
+		imageobject.addEventListener("mouseenter", mouseenter, false)
+		imageobject.addEventListener("mouseleave", mouseleave, false)
+
+		//socket.emit("CreateDeck", {'deck':namestring})
+		document.body.appendChild(imageobject)
+	}
+
+	this.setposition = function(posx, posy)
+	{
+		imageobject.style.left = posx
+		imageobject.style.top = posy
+	}
+
+
+	this.drawcard = function(CardName, CardID)
+	{
+		ActiveCardObject = new cardobject()
+		ActiveCardObject.
+		ActiveCardObject.rendercard(CardName)
+	}
+
+	this.delete = function()
+	{
+		delete DecksAndCards[this.id]
+		imageobject.parentNode.removeChild(imageobject)
+		socket.emit("DeleteDeck", {"DeckID":this.id})
+	}
+
+	this.shuffle = function()
+	{
+		socket.emit("ShuffleDeck", {"DeckID":this.id})
+	}
+}
+
+function cardobject(){
+
+	this.id = null
+	var self = this
+	var imageobject = new Image();
+
+	var mouseenter = {
+		handleEvent: function(){
+		ActiveCardObject = self;
+		imageobject.style.border='2px solid #0000FF';
+		}
+	}
+
+	var mouseleave = {
+		handleEvent: function(){
+		imageobject.style.border=""
+		}
+	}
+
+	this.delete = function()
+	{
+		delete DecksAndCards[this.id]
+		//this needs to send a message to the server so it can recyle the unique IDs
+		imageobject.parentNode.removeChild(imageobject)
+	}
+
+	this.rendercard = function (cardname)
+	{
+		imageobject.src = cardname
+		console.log(cardname)
+		this.id=cardname
+		imageobject.style.position="absolute"
+		imageobject.style.left = "300px"
+		imageobject.style.top = "0px"
+		imageobject.setAttribute("class", "drag")
+		imageobject.addEventListener("mouseenter", mouseenter, false)
+		imageobject.addEventListener("mouseleave", mouseleave, false)
+		document.body.appendChild(imageobject)
+	}
+
+}
+
+
+$(document).ready(function(){
+	//handobject = new handobject()
+	//handobject.createhand()
+	HandWindow = window.open("createhand", "Hand", "height=200,width=800")
+
+	document.addEventListener("keydown", function(e)
+	{
+
+		//Keycode 8 = backspace key (Delete card (not deck))
+		if(e.keyCode == 8)
+		{
+			if(ActiveCardObject != 0)
+			{
+				e.preventDefault()
+				ActiveCardObject.delete()
+				ActiveCardObject = 0
+			}
+		}
+
+
+		//Keycode 46 = Delete Key (Delete deck)
+		if(e.keyCode == 46)
+		{
+			if(BoundDeckObject != 0)
+			{
+				BoundDeckObject.delete()
+			}
+		}
+
+
+		//Keycode 65 = A (Add to deck and shuffle)
+		if(e.keyCode ==65)
+		{
+			if(ActiveCardObject != 0)
+			{
+				socket.emit("AddDeckActiveCardAndShuffle", {"DeckID":BoundDeckObject.id, "CardID":ActiveCardObject.id})
+				ActiveCardObject.delete()
+				ActiveCardObject = 0
+			}
+		}
+
+
+		//Keycode 66 = B (bind deck) for deck object
+		//Keycode 66 = B (Add card to bottom of bound deck) for card object
+		if(e.keyCode == 66)
+		{
+			if(BoundDeckObject == 0 && ActiveDeckObject != 0)
+			{
+				ActiveDeckObject.removeMouseListeners()
+				ActiveDeckObject.setborder('2px solid #E8272C')
+				BoundDeckObject = ActiveDeckObject
+				socket.emit("CurrentBoundDeckObject", {"DeckID":BoundDeckObject.id})
+			}
+
+			if(BoundDeckObject !== ActiveDeckObject)
+			{
+				BoundDeckObject.addMouseListeners()
+				BoundDeckObject.setborder("")
+				BoundDeckObject = ActiveDeckObject
+				BoundDeckObject.setborder('2px solid #E8272C')
+				BoundDeckObject.removeMouseListeners()
+				socket.emit("CurrentBoundDeckObject", {"DeckID":BoundDeckObject.id})
+			}
+		}
+
+		//Keycode 68 = D (draw card from bound deck to board)
+		if(e.keyCode == 68)
+		{
+			if(BoundDeckObject != 0)
+			{
+				console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
+				socket.emit("DrawCard", {"DeckID":BoundDeckObject.id})
+			}
+		}
+
+		//Keycode 71 = G (Grab the active card object and put it into your hand)
+		if(e.keyCode == 71)
+		{
+			if(ActiveCardObject != 0)
+			{
+				console.log(ActiveCardObject.id + "<-- This card has been grabbed")
+				socket.emit("GrabCard", {"CardID":ActiveCardObject.id})
+				ActiveCardObject.delete()
+				ActiveCardObject = 0
+
+
+			}
+		}
+
+		//Keycode 72 = H (draw a card from bound deck to hand)
+		if(e.keyCode == 72)
+		{
+			if(BoundDeckObject != 0)
+			{
+				console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
+				socket.emit("DrawCardHand", {"DeckID":BoundDeckObject.id})
+			}
+		}
+		//Keycode 77 = M (Put card on bottoM of bound deck)
+		if(e.keyCode == 77)
+		{
+			if(BoundDeckObject != 0 && ActiveCardObject != 0)
+			{
+				socket.emit("BottomDeckActiveCard", {"DeckID":BoundDeckObject.id, "CardID":ActiveCardObject.id})
+				ActiveCardObject.delete()
+				ActiveCardObject = 0
+			}
+		}
+
+
+		//Keycode 83 = S (shuffle bound deck)
+		if(e.keyCode == 83)
+		{
+			if(BoundDeckObject != 0)
+			{
+				socket.emit("ShuffleDeck", {"DeckID":BoundDeckObject.id})
+			}
+		}
+
+		//Keycode 84 = T (add ActiveCardObject to top of deck)
+		if(e.keyCode == 84)
+		{
+			if(ActiveCardObject != 0)
+			{
+				socket.emit("TopDeckActiveCard", {"DeckID":BoundDeckObject.id, "CardID":ActiveCardObject.id})
+				ActiveCardObject.delete()
+				ActiveCardObject = 0
+			}
+		}
+
+
+	})
+
+	socket.on("DrawCard", function(data){
+		ActiveDeckObject.drawcard(data.CardName, data.CardID)
+	})
+
+	socket.on("PositionDeck", function(data){
+		console.log(data.DeckID)
+		console.log(data.x)
+		console.log(data.y)
+		DecksAndCards[data.DeckID].setposition(data.x, data.y)
+	})
+
+	socket.on("ToBoard", function(data){
+		ActiveCardObject = new cardobject
+		ActiveCardObject.rendercard(data.CardID)
+	})
+
+	socket.on("DeckID", function(data){
+
+		ActiveDeckObject = new deckobject()
+		console.log(data.DeckID + "<--- this is the deckID of new deck..")
+		ActiveDeckObject.id = data.DeckID
+		ActiveDeckObject.createdeck(data.DeckName)
+		var test = data.DeckID
+		DecksAndCards[data.DeckID] = ActiveDeckObject
+		//alert(data.ID)
+		console.log("***********************")
+		console.log(ActiveDeckObject.id)
+		console.log(data)
+		console.log(data.ID)
+		console.log("***********************")
+	})
+
+	socket.on('DecksDir', function(data){
+		data = data.slice(0, data.length -1)
+		var DecksArray = data.split(";")
+		console.log(DecksArray.join())
+		for(var i = 0; i < DecksArray.length; i=i+1)
+		{
+			var DeckArray = DecksArray[i].split(",")
+			console.log(DeckArray.join())
+			DeckArray.splice(1,1)
+			console.log(DeckArray.join())
+
+			var cardsButtonView = document.createElement("button");
+			cardsButtonView.style.position="absolute"
+			cardsButtonView.style.left = "0px"
+			cardsButtonView.style.top = i*25 + "px"
+			//DistanceYViewButton = DistanceYViewButton + 6
+
+			var cardsButtonCreate = document.createElement("button");
+			cardsButtonCreate.style.position="absolute"
+			cardsButtonCreate.style.left = "200px"
+			cardsButtonCreate.style.top = i*25 + "px"
+
+			console.log(data + "<-- this is the split array")
+			console.log(data.length + "<-- this is the length")
+
+			var buttonTextView = document.createTextNode("View_" + DeckArray[0])
+			var buttonTextCreate = document.createTextNode("Create_" + DeckArray[0])
+			cardsButtonView.appendChild(buttonTextView)
+			cardsButtonCreate.appendChild(buttonTextCreate)
+
+			cardsButtonCreate.onclick=(function(namestring)
+			{
+				return function()
+				{
+					socket.emit("CreateDeck", {'deck':namestring})
+					//ActiveDeckObject = new deckobject()
+					//ActiveDeckObject.createdeck(namestring)
+				}
+			})(DeckArray[0])
+
+
+			cardsButtonView.onclick = (function(namestring){
+				return function(){
+				console.log("This should emit something to the socket, i don't see it")
+				console.log(namestring + "<-- this is data i")
+				var NewWindow = window.open("", "MsgWindow", "height=200,width=200")
+				NewWindow.document.write("<html><head><title></title></head><body></body>");
+				CardsAndDeckArray = namestring.split(",")
+
+					for(var k = 1; k < CardsAndDeckArray.length; ++k)
+					{
+						var image = new Image();
+						console.log("pictures/" + CardsAndDeckArray[0] + "/" + CardsAndDeckArray[k] + "<-- this is the image source")
+						image.src = "pictures/" + CardsAndDeckArray[0] + "/" + CardsAndDeckArray[k];
+						NewWindow.document.body.appendChild(image)
+					}
+				}
+			})(DeckArray.join())
+
+			document.body.appendChild(cardsButtonView);
+			document.body.appendChild(cardsButtonCreate);
+
+		}
+	})
+
+	socket.emit("PopulateDecks")
+})
+
+/***********************************************
+* Drag and Drop Script: � Dynamic Drive (http://www.dynamicdrive.com)
+* This notice MUST stay intact for legal use
+* Visit http://www.dynamicdrive.com/ for this script and 100s more.
+***********************************************/
+
+</script>
+
+</head>
+<body class="advanced">
+
+<div id=CounterX> some serious x </div>
+<div id=CounterY> some serious x </div>
+</form>
+<script>
+
+var dragobject={
+countemit: 0, z: 0, x: 0, y: 0, offsetx : null, offsety : null, targetobj : null, dragapproved : 0,
+initialize:function(){
+document.onmousedown=this.drag
+document.onmouseup=function()
+{
+	this.dragapproved=0
+	socket.emit("PositionDeck", {"DeckID": ActiveDeckObject.id, "x":this.offsetx+evtobj.clientX-this.x+"px", "y":this.targetobj.style.top=this.offsety+evtobj.clientY-this.y+"px"})
+}
+},
+drag:function(e){
+
+var evtobj=window.event? window.event : e
+this.targetobj=window.event? event.srcElement : e.target
+
+var evtobj=window.event || e
+this.targetobj=event.srcElement || e.target
+if (this.targetobj.className=="drag"){
+this.dragapproved=1
+this.countemit = 0
+if (isNaN(parseInt(this.targetobj.style.left))){this.targetobj.style.left=0}
+if (isNaN(parseInt(this.targetobj.style.top))){this.targetobj.style.top=0}
+
+
+//This sets the left and top of the image, where it is loaded on the page
+this.offsetx=parseInt(this.targetobj.style.left)
+console.log(this.offsetx + "<-- this is the offset x")
+this.offsety=parseInt(this.targetobj.style.top)
+console.log(this.offsety + "<-- this is the offset y")
+
+
+//The event object which is passed automatically to a function when bound to an event, like onmousedown
+// has x and y coordinantes of e.clientX and e.clientY, in this case e is evtobj which is a selection between the window.event, and the automatically passed variable, this is
+//a difference between IE and other browsers
+
+this.x=evtobj.clientX
+console.log(this.x + "<-- this is the clientx")
+this.y=evtobj.clientY
+console.log(this.y + "<-- this is the clienty\n")
+
+if (evtobj.preventDefault)
+evtobj.preventDefault()
+
+document.onmousemove=dragobject.moveit
+}
+},
+moveit:function(e){
+var evtobj=window.event? window.event : e
+if (this.dragapproved==1){
+this.targetobj.style.left=this.offsetx+evtobj.clientX-this.x+"px"
+this.targetobj.style.top=this.offsety+evtobj.clientY-this.y+"px"
+this.countemit = this.countemit + 1
+console.log(this.countemit + "<- this is count emit")
+if (this.countemit == 10)
+{
+	console.log(ActiveDeckObject.id + "<-- this is the longDesc, and should be the ID of the deck object")
+	this.countemit = 0
+	socket.emit("PositionDeck", {"DeckID": this.DeckID, "x":this.offsetx+evtobj.clientX-this.x+"px", "y":this.targetobj.style.top=this.offsety+evtobj.clientY-this.y+"px"})
+}
+
+return false
+}
+}
+}
+//deckobject.initialize()
+dragobject.initialize()
+
+
+</script>
+</body>
+</html>

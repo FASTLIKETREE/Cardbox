@@ -1,0 +1,124 @@
+DrawCardToHand
+DrawToGameBoard
+CardInHandToGameBoard
+
+PutCardBackOnTop
+PutCardBackOnBottom
+ShuffleDeck
+
+/*
+function handobject(){
+	var self = this
+	var imageobject = new Image();
+
+	var mouseenter = {
+		handleEvent: function(){
+		ActiveHandObject = self;
+		imageobject.style.border='2px solid #0000FF';
+		}
+	}
+
+	var mouseleave = {
+		handleEvent: function(){
+		imageobject.style.border=""
+		}
+	}
+
+	this.delete = function()
+	{
+		imageobject.parentNode.removeChild(imageobject)
+	}
+
+	this.createhand = function()
+	{
+		HandWindow = window.open("createhand?id=1234", "Hand", "height=200,width=800")
+		//HandWindow.document.write("<html><head><title>sdgasdgasdgasdg</title></head><body>xvazxvzdv</body>");
+	}
+
+	this.rendercard = function (cardname)
+	{
+		imageobject.src = cardname
+		imageobject.style.position="absolute"
+		imageobject.style.left = "100px"
+		imageobject.style.top = "100px"
+		imageobject.setAttribute("class", "drag")
+		imageobject.addEventListener("mouseenter", mouseenter, false)
+		imageobject.addEventListener("mouseleave", mouseleave, false)
+		HandWindow.document.body.appendChild(imageobject)
+	}
+}
+*/
+
+
+
+<script type="text/javascript" src="https://github.com/mark-rolich/Event.js"></script>
+	<script type="text/javascript" src="https://github.com/mark-rolich/Event.js"></script>
+    <a href="http://jquery.com/">jQuery</a>
+    <script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+
+	.drag{
+position:relative;
+cursor:hand;
+z-index: 100;
+}
+
+
+
+
+var deckobject={CardsDir : null, DrawCard : function(e){
+console.log("The top of the event shit")
+var evtobj=window.event || e
+this.targetobj = e.target
+
+console.log("Does this reigster teh click event at all?")
+if(this.targetobj.className=="deck"){
+	console.log("This has hit the deck class name check")
+	var laboratory = new Image();
+	laboratory.src="Laboratory.png";
+	laboratory.onload = function() {
+	this.setAttribute("class", "drag")
+	laboratory.style.position = "absolute"
+	this.style.left = "100"
+	this.style.top = "100"
+	this.style.width = "150px"
+	document.body.appendChild(laboratory)}
+}
+},
+initialize : function(){
+console.log("This is getting into the initalize function of the deck object")
+var ElementId = document.getElementById("deckid");
+ElementId.addEventListener("onmousedown", this.DrawCard(), false)
+}
+}
+
+
+
+
+//console.log(SplitCardArray.length + "<-- this is the array length for split cards...")
+
+for(var i = 2; SplitCardArray.length; ++i)
+{
+	alert(SplitCardArray[0] + "/" + SplitCardArray[i])
+	DrawCard(SplitCardArray[0] + "/" + SplitCardArray[i], i*200, 0)
+}
+
+
+	function loadImage(name, x, y)
+	{
+		var laboratory = new Image();
+		laboratory.src="pictures/" + name;
+		laboratory.onload = function() {
+		this.setAttribute("class", "drag")
+		laboratory.style.position = "absolute"
+		this.style.left = x
+		this.style.top = y
+		this.style.width = "150px"
+		document.body.appendChild(laboratory)
+
+		}
+	}
+	loadImage("MagicWoodFarmBase/Laboratory.png", 0, 100);
+
+
+
+	<img src="pictures/MagicWoodFarmBase/Laboratory.png" width="42" height="42">

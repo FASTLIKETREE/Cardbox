@@ -1,0 +1,228 @@
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Demo</title>
+	<style type="text/css">
+</style>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
+<script>
+$(document).ready(function(){
+ActiveObject = 0
+var CardsObject = {}
+
+socket = io.connect();
+socket.emit("HandWindowCreated")
+
+function cardobject(){
+
+	this.id = null
+	this.imgsrc = null
+	var self = this
+	var imageobject = new Image();
+
+	var mouseenter = {
+		handleEvent: function(){
+		ActiveObject = self;
+		imageobject.style.border='2px solid #0000FF';
+		}
+	}
+
+	var mouseleave = {
+		handleEvent: function(){
+		imageobject.style.border=""
+		}
+	}
+
+	this.delete = function()
+	{
+		delete CardsObject[this.id]
+		imageobject.parentNode.removeChild(imageobject)
+	}
+
+	this.rendercard = function (cardname)
+	{
+		imageobject.src = cardname
+		console.log(cardname)
+		//this.id=cardname
+		imageobject.style.position="absolute"
+		imageobject.style.left = "300px"
+		imageobject.style.top = "0px"
+		imageobject.setAttribute("class", "drag")
+		imageobject.addEventListener("mouseenter", mouseenter, false)
+		imageobject.addEventListener("mouseleave", mouseleave, false)
+		document.body.appendChild(imageobject)
+	}
+
+}
+
+
+	document.addEventListener("keydown", function(e)
+	{
+		//Keycode 8 = backspace key (Delete card (not deck))
+		if(e.keyCode == 8)
+		{
+			if(ActiveObject != 0)
+			{
+				e.preventDefault()
+				ActiveObject.delete()
+				ActiveObject = 0
+			}
+		}
+
+		//Keycode 65 = A (Add to deck and shuffle)
+		if(e.keyCode ==65)
+		{
+			if(ActiveObject != 0)
+			{
+				socket.emit("AddDeckActiveCardAndShuffle", {"CardID":ActiveObject.id})
+				ActiveObject.delete()
+				ActiveObject = 0
+			}
+		}
+
+		// Keycode 66 = B (send card to Board)
+		if(e.keyCode == 66)
+		{
+			socket.emit("ToBoard", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id})
+			ActiveObject.delete()
+			ActiveObject = 0
+		}
+
+		//Keycode 77 = M (Put card on bottoM of bound deck)
+		if(e.keyCode == 77)
+		{
+			if(ActiveObject != 0)
+			{
+				socket.emit("BottomDeckActiveCard", {"CardSrc":ActiveObject.imgsrc})
+				ActiveObject.delete()
+				ActiveObject = 0
+			}
+		}
+
+		//Keycode 84 = T (add ActiveObject to top of deck)
+		if(e.keyCode == 84)
+		{
+			if(ActiveObject != 0)
+			{
+				socket.emit("TopDeckActiveCard", {"CardSrc":ActiveObject.imgsrc})
+				ActiveObject.delete()
+				ActiveObject = 0
+			}
+		}
+	})
+
+	socket.on("CardToHand", function(data){
+
+		console.log("This is not getting here from the server? uh oh...")
+		console.log(data.CardID + "<-- this is the card id")
+		console.log(data.CardSrc + "<-- this is the card src")
+		console.log("This is not getting here from the server? uh oh...")
+
+		CardsObject[data.CardID] = new cardobject()
+		ActiveObject = CardsObject[data.CardID]
+		ActiveObject.id = data.CardID
+		ActiveObject.imgsrc = data.CardSrc
+		console.log(ActiveObject.id + "<-- this is the card id")
+		ActiveObject.rendercard(data.CardSrc)
+		console.log(ActiveObject.id + "<-- this is the card id")
+	})
+
+
+	socket.on("GrabCardToHand", function(data){
+		CardsObject[data.CardID] = new cardobject()
+		ActiveObject = CardsObject[data.CardID]
+		ActiveObject.id = data.CardID
+		ActiveObject.imgsrc = data.CardSrc
+		ActiveObject.rendercard(data.CardSrc)
+	})
+
+
+})
+
+window.onbeforeunload = function ()
+{
+	socket.emit("LeaveRoom")
+	HandWindow.close()
+}
+
+var dragobject={
+countemit: 0, z: 0, x: 0, y: 0, offsetx : null, offsety : null, targetobj : null, dragapproved : 0, FinalX : null, FinalY : null,
+initialize:function(){
+document.onmousedown=this.drag
+document.onmouseup=function()
+{
+	this.dragapproved=0
+	if(ActiveObject != 0){
+	socket.emit("PositionDeck", {"DeckID": ActiveObject.id, "x":FinalX, "y":FinalY})}
+}
+},
+drag:function(e){
+
+var evtobj=window.event? window.event : e
+this.targetobj=window.event? event.srcElement : e.target
+
+var evtobj=window.event || e
+this.targetobj=event.srcElement || e.target
+if (this.targetobj.className=="drag"){
+this.dragapproved=1
+this.countemit = 0
+if (isNaN(parseInt(this.targetobj.style.left))){this.targetobj.style.left=0}
+if (isNaN(parseInt(this.targetobj.style.top))){this.targetobj.style.top=0}
+
+
+//This sets the left and top of the image, where it is loaded on the page
+this.offsetx=parseInt(this.targetobj.style.left)
+console.log(this.offsetx + "<-- this is the offset x")
+this.offsety=parseInt(this.targetobj.style.top)
+console.log(this.offsety + "<-- this is the offset y")
+
+
+//The event object which is passed automatically to a function when bound to an event, like onmousedown
+// has x and y coordinantes of e.clientX and e.clientY, in this case e is evtobj which is a selection between the window.event, and the automatically passed variable, this is
+//a difference between IE and other browsers
+
+this.x=evtobj.clientX
+console.log(this.x + "<-- this is the clientx")
+this.y=evtobj.clientY
+console.log(this.y + "<-- this is the clienty\n")
+
+if (evtobj.preventDefault)
+evtobj.preventDefault()
+
+document.onmousemove=dragobject.moveit
+}
+},
+moveit:function(e){
+var evtobj=window.event? window.event : e
+if (this.dragapproved==1){
+this.targetobj.style.left=this.offsetx+evtobj.clientX-this.x+"px"
+this.targetobj.style.top=this.offsety+evtobj.clientY-this.y+"px"
+this.countemit = this.countemit + 1
+FinalX = this.offsetx+evtobj.clientX-this.x+"px"
+FinalY = this.offsety+evtobj.clientY-this.y+"px"
+
+if (this.countemit == 10)
+{
+	console.log(ActiveObject.id + "<-- this is the longDesc, and should be the ID of the deck object")
+	this.countemit = 0
+	if(ActiveObject != 0){
+	socket.emit("PositionDeck", {"DeckID": ActiveObject.id, "x":this.offsetx+evtobj.clientX-this.x+"px", "y":this.targetobj.style.top=this.offsety+evtobj.clientY-this.y+"px"})}
+}
+
+return false
+}
+}
+}
+//deckobject.initialize()
+dragobject.initialize()
+
+</script>
+
+</head>
+<body class="advanced">
+</body>
+</html>
+
+
