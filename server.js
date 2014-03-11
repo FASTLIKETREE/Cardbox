@@ -5,12 +5,10 @@ var io = require("C:\\Program Files\\nodejs\\node_modules\\socket.io")
 var qs = require("querystring")
 
 MasterConnectionObject = {};
-
 GameWindowConnectionObject = {};
 HandWindowConnectionObject = {};
+IDReaperArray = [];
 
-
-//MasterDeckArray = [];
 MasterCardAndDeckStateObject = {}
 
 //Likely the main deck array needs to be replaced by an object, whos values are composed of 4 elements
@@ -18,7 +16,6 @@ MasterCardAndDeckStateObject = {}
 //3 The room the card belong to
 //4 The x position
 //5 The y position
-
 
 
 CurrentlySelectedDeckID = -1
@@ -131,8 +128,8 @@ function start(route, handle)
 
 	socket.on('CreateDeck', function(data){
 		console.log("----------------")
-		var xRender = 0
-		var yRender = 200
+		var xRender = "0px"
+		var yRender = "200px"
 
 		console.log(data)
 		console.log(data.deck)
@@ -143,21 +140,29 @@ function start(route, handle)
 				cards[i] = "/pictures/" + data.deck + "/" + cards[i]
 			}
 
-			MasterCardAndDeckStateObject[UniqueIDCounter] = new DeckOrCardObject()
-			MasterCardAndDeckStateObject[UniqueIDCounter].cardarray = cards
-			MasterCardAndDeckStateObject[UniqueIDCounter].x = xRender
-			MasterCardAndDeckStateObject[UniqueIDCounter].y = yRender
+			var ObjectID = null
+			if(IDReaperArray.length > 0){
+				console.log(IDReaperArray + "<-- thisi s the id reaper array")
+				ObjectID = IDReaperArray.splice(0,1)}
+			else{
+				ObjectID = UniqueIDCounter
+				UniqueIDCounter = UniqueIDCounter + 1
+			}
+
+			MasterCardAndDeckStateObject[ObjectID] = new DeckOrCardObject()
+			MasterCardAndDeckStateObject[ObjectID].cardarray = cards
+			MasterCardAndDeckStateObject[ObjectID].x = xRender
+			MasterCardAndDeckStateObject[ObjectID].y = yRender
 			console.log(MasterCardAndDeckStateObject)
 			//console.log(MasterCardAndDeckStateObject.cardarray)
-			sio.sockets.emit("DeckID", {"DeckID":UniqueIDCounter, "DeckName":data.deck, "x":xRender, "y":yRender})
-			UniqueIDCounter = UniqueIDCounter + 1
+			sio.sockets.emit("DeckID", {"DeckID":ObjectID, "DeckName":data.deck, "x":xRender, "y":yRender})
 			console.log("----------------")
 		})
     })
 
 	socket.on("DrawCard", function(){
 		console.log(MasterCardAndDeckStateObject)
-		MasterCardAndDeckStateObject[UniqueIDCounter] = new DeckOrCardObject()
+		//MasterCardAndDeckStateObject[UniqueIDCounter] = new DeckOrCardObject()
 		var CDObject = MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject]
 		/*
 		console.log(MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].cardarray)
@@ -167,51 +172,83 @@ function start(route, handle)
 		console.log((Number((CDObject.x).replace("px", "")) + 360) + "px")
 		console.log(Number((CDObject.y).replace("px", "")) + "px")
 		*/
+
 		if(CDObject.cardarray.length > 0)
 		{
-			MasterCardAndDeckStateObject[UniqueIDCounter].x = (Number((CDObject.x).replace("px", "")) + 360) + "px"
-			MasterCardAndDeckStateObject[UniqueIDCounter].y = Number((CDObject.y).replace("px", "")) + "px"
-			sio.sockets.emit("DrawCard", {"CardSrc":CDObject.cardarray[0], "CardID":UniqueIDCounter, "x":MasterCardAndDeckStateObject[UniqueIDCounter].x, "y":MasterCardAndDeckStateObject[UniqueIDCounter].y})
-			MasterCardAndDeckStateObject[UniqueIDCounter].cardarray = CDObject.cardarray.splice(0,1)
+			var ObjectID = null
+			if(IDReaperArray.length > 0){
+				console.log(IDReaperArray + "<-- thisi s the id reaper array")
+				ObjectID = IDReaperArray.splice(0,1)}
+			else{
+				ObjectID = UniqueIDCounter
+				UniqueIDCounter = UniqueIDCounter + 1
+			}
+
+			MasterCardAndDeckStateObject[ObjectID] = new DeckOrCardObject()
+			MasterCardAndDeckStateObject[ObjectID].x = (Number((CDObject.x).replace("px", "")) + 360) + "px"
+			MasterCardAndDeckStateObject[ObjectID].y = Number((CDObject.y).replace("px", "")) + "px"
+			sio.sockets.emit("DrawCard", {"CardSrc":CDObject.cardarray[0], "CardID":ObjectID, "x":MasterCardAndDeckStateObject[ObjectID].x, "y":MasterCardAndDeckStateObject[ObjectID].y})
+			MasterCardAndDeckStateObject[ObjectID].cardarray = CDObject.cardarray.splice(0,1)
 			console.log(MasterCardAndDeckStateObject)
-			UniqueIDCounter = UniqueIDCounter + 1
+
 		}
 	})
+
+	socket.on("DrawCardHand", function(data){
+		var CDObject = MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject]
+		if(CDObject.cardarray.length > 0)
+		{
+			var ObjectID = null
+			if(IDReaperArray.length > 0){
+				console.log(IDReaperArray + "<-- thisi s the id reaper array")
+				ObjectID = IDReaperArray.splice(0,1)}
+			else{
+				ObjectID = UniqueIDCounter
+				UniqueIDCounter = UniqueIDCounter + 1
+			}
+
+			MasterCardAndDeckStateObject[ObjectID] = new DeckOrCardObject()
+			MasterCardAndDeckStateObject[ObjectID].x = "0px"
+			MasterCardAndDeckStateObject[ObjectID].y = "0px"
+			HandWindowConnectionObject[address.address].emit("CardToHand", {"CardSrc":MasterCardAndDeckStateObject[data.DeckID].cardarray[0], "CardID":ObjectID, "x":MasterCardAndDeckStateObject[ObjectID].x, "y":MasterCardAndDeckStateObject[ObjectID].y})
+			MasterCardAndDeckStateObject[ObjectID].cardarray = CDObject.cardarray.splice(0,1)
+			MasterCardAndDeckStateObject[ObjectID].owner = address.address
+		}
+	})
+
 
 	socket.on("ToBoard", function(data){
 		console.log("To BOARD CALLED!!" + data.CardID)
 		console.log("To BOARD CALLED!!" + data.CardSrc)
 		console.log(MasterCardAndDeckStateObject)
-
-
-		UniqueIDCounter = UniqueIDCounter + 1
-		//MasterConnectionObject[address.address].emit("ToBoard", {"CardName":data.CardName, "CardID":UniqueIDCounter})
-		sio.sockets.emit("ToBoard", {"CardSrc":data.CardSrc, "CardID":UniqueIDCounter})
+		MasterCardAndDeckStateObject[data.CardID].owner = null
+		sio.sockets.emit("ToBoard", {"CardSrc":data.CardSrc, "CardID":data.CardID})
 	})
 
 	socket.on("GrabCard", function(data){
 		console.log("Grab card to hand called!!!" + data.CardID)
 		console.log("Grab card to hand called!!!" + data.CardSRC)
 		//sio.sockets.emit("GrabCard", {"CardSRC":data.CardSRC, "CardID":data.CardID})
-		sio.sockets.emit("DeleteActiveCardObject", {"CardSRC":data.CardSRC, "CardID":data.CardID})
+		sio.sockets.emit("DeleteObject", {"CardSRC":data.CardSRC, "ObjectID":data.CardID})
+		MasterCardAndDeckStateObject[data.CardID].owner = address.address
 		HandWindowConnectionObject[address.address].emit("CardToHand", {"CardSrc":data.CardSRC, "CardID":data.CardID})
 	})
 
-	socket.on("DrawCardHand", function(data){
-		HandWindowConnectionObject[address.address].emit("CardToHand", {"CardSrc":MasterCardAndDeckStateObject[data.DeckID].cardarray[0], "CardID":UniqueIDCounter})
-		MasterCardAndDeckStateObject[data.DeckID].cardarray.splice(0,1)
-		//sio.sockets.emit("DeleteActiveCardObject", {"CardID":data.CardID})
+	socket.on("PositionDeck", function(data){
+		if(typeof(MasterCardAndDeckStateObject[data.DeckID]) === "object" && MasterCardAndDeckStateObject[data.DeckID] != null)
+		{
+			console.log(MasterCardAndDeckStateObject)
+			MasterCardAndDeckStateObject[data.DeckID].x = data.x
+			MasterCardAndDeckStateObject[data.DeckID].y = data.y
+			socket.broadcast.emit("PositionDeck", {"DeckID":data.DeckID, "x": data.x, "y": data.y})
+		}
 	})
 
-	socket.on("PositionDeck", function(data){
-		console.log("-------------------------------SDGSDG---------------")
-		console.log("DeckID:" + data.DeckID)
-		console.log("x:" + data.x)
-		console.log("y:" + data.y)
+	socket.on("PositionCardHand", function(data){
 		console.log(MasterCardAndDeckStateObject)
 		MasterCardAndDeckStateObject[data.DeckID].x = data.x
 		MasterCardAndDeckStateObject[data.DeckID].y = data.y
-		socket.broadcast.emit("PositionDeck", {"DeckID":data.DeckID, "x": data.x, "y": data.y})
+		//socket.broadcast.emit("PositionDeck", {"DeckID":data.DeckID, "x": data.x, "y": data.y})
 	})
 
 	socket.on("ShuffleDeck", function(data){
@@ -222,30 +259,28 @@ function start(route, handle)
 		console.log(MasterCardAndDeckStateObject)
 	})
 
-	socket.on("AddDeckActiveCardAndShuffle", function(data){
+	socket.on("AddToDeck", function(data){
 		console.log(MasterCardAndDeckStateObject)
 		console.log("\n")
-		delete MasterCardAndDeckStateObject[data.CardID]
-		MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].cardarray.push(data.CardSrc)
-		MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].cardarray = shuffle(MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].cardarray)
-		console.log(MasterCardAndDeckStateObject)
-	})
+		console.log(data.Key +"<-- This is the key!")
+		switch(data.Key){
+			case "a":
+				MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].cardarray.push(data.CardSrc)
+				MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].cardarray = shuffle(MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].cardarray)
+				break
+			case "t":
+				console.log("IS THIS GETTINGINTO THE T CODE?!?!?")
+				MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].cardarray.unshift(data.CardSrc)
+				break
+			case "m":
+				MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].cardarray.push(data.CardSrc)
+				break
+		}
 
-	socket.on("TopDeckActiveCard", function(data){
-		console.log(MasterCardAndDeckStateObject)
-		console.log("\n")
-		MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].cardarray.unshift(data.CardSrc)
 		delete MasterCardAndDeckStateObject[data.CardID]
+		IDReaperArray.push(data.CardID)
 		console.log(MasterCardAndDeckStateObject)
-		sio.sockets.emit("DeleteActiveCardObject", {"CardID":data.CardID})
-	})
-
-	socket.on("BottomDeckActiveCard", function(data){
-		console.log(MasterCardAndDeckStateObject)
-		console.log("\n")
-		delete MasterCardAndDeckStateObject[data.CardID]
-		MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].cardarray.push(data.CardSrc)
-		console.log(MasterCardAndDeckStateObject)
+		sio.sockets.emit("DeleteObject", {"ObjectID":data.CardID})
 	})
 
 	socket.on("CurrentBoundDeckObject", function(data)
@@ -256,20 +291,11 @@ function start(route, handle)
 	})
 
 
-//WHEN THE DELETE FUNCTIONS ARE CALLED WE NEED TO ADD THEIR UNIQUE IDs BACK INTO AN ARRAY THAT CAN BE CONSUMED LATER, NO
-//REASON TO DIG THROUGH AN ARRAY FOR UNUSED IDS, JUST ADD THEM TO ANOTHER ARRAY/OBJECT AND SEARCH THROUGH THE REAPED ID ARRAY/OBJECT
-
-	socket.on("DeleteBoundDeckObject", function(data){
-		sio.sockets.emit("DeleteBoundDeckObject", {"DeckID":data.DeckID})
-	})
-
-	socket.on("DeleteActiveCardObject", function(data){
-		sio.sockets.emit("DeleteActiveCardObject", {"CardID":data.CardID})
-	})
-
-	socket.on("DeleteDeck", function(data){
+	socket.on("DeleteObject", function(data){
 		console.log(MasterCardAndDeckStateObject)
-		delete MasterCardAndDeckStateObject[data.DeckID]
+		delete MasterCardAndDeckStateObject[data.ObjectID]
+		IDReaperArray.push(data.ObjectID)
+		sio.sockets.emit("DeleteObject", {"ObjectID":data.ObjectID})
 		console.log(MasterCardAndDeckStateObject)
 	})
 

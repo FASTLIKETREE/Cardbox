@@ -76,7 +76,7 @@ function cardobject(){
 		{
 			if(ActiveObject != 0)
 			{
-				socket.emit("AddDeckActiveCardAndShuffle", {"CardID":ActiveObject.id})
+				socket.emit("AddDeckActiveCardAndShuffle", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id})
 				ActiveObject.delete()
 				ActiveObject = 0
 			}
@@ -95,7 +95,7 @@ function cardobject(){
 		{
 			if(ActiveObject != 0)
 			{
-				socket.emit("BottomDeckActiveCard", {"CardSrc":ActiveObject.imgsrc})
+				socket.emit("BottomDeckActiveCard", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id})
 				ActiveObject.delete()
 				ActiveObject = 0
 			}
@@ -106,7 +106,7 @@ function cardobject(){
 		{
 			if(ActiveObject != 0)
 			{
-				socket.emit("TopDeckActiveCard", {"CardSrc":ActiveObject.imgsrc})
+				socket.emit("TopDeckActiveCard", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id})
 				ActiveObject.delete()
 				ActiveObject = 0
 			}
@@ -155,7 +155,7 @@ document.onmouseup=function()
 {
 	this.dragapproved=0
 	if(ActiveObject != 0){
-	socket.emit("PositionDeck", {"DeckID": ActiveObject.id, "x":FinalX, "y":FinalY})}
+	socket.emit("PositionCardHand", {"DeckID": ActiveObject.id, "x":FinalX, "y":FinalY})}
 }
 },
 drag:function(e){
@@ -208,7 +208,7 @@ if (this.countemit == 10)
 	console.log(ActiveObject.id + "<-- this is the longDesc, and should be the ID of the deck object")
 	this.countemit = 0
 	if(ActiveObject != 0){
-	socket.emit("PositionDeck", {"DeckID": ActiveObject.id, "x":this.offsetx+evtobj.clientX-this.x+"px", "y":this.targetobj.style.top=this.offsety+evtobj.clientY-this.y+"px"})}
+	socket.emit("PositionCardHand", {"DeckID": ActiveObject.id, "x":this.offsetx+evtobj.clientX-this.x+"px", "y":this.targetobj.style.top=this.offsety+evtobj.clientY-this.y+"px"})}
 }
 
 return false
