@@ -150,7 +150,7 @@ $(document).ready(function(){
 			e.preventDefault()
 			if(ActiveObject != 0 && ActiveObject.isdeck == 0)
 			{
-				socket.emit("DeleteActiveCardObject", {"CardID":ActiveObject.id})
+				socket.emit("DeleteObject", {"ObjectID":ActiveObject.id})
 			}
 		}
 
@@ -160,7 +160,7 @@ $(document).ready(function(){
 		{
 			if(BoundDeckObject != 0)
 			{
-				socket.emit("DeleteBoundDeckObject", {"DeckID":BoundDeckObject.id})
+				socket.emit("DeleteObject", {"ObjectID":BoundDeckObject.id})
 				//BoundDeckObject.delete()
 			}
 		}
@@ -171,9 +171,7 @@ $(document).ready(function(){
 		{
 			if(ActiveObject != 0 && ActiveObject.isdeck == 0)
 			{
-				socket.emit("AddDeckActiveCardAndShuffle", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id})
-				ActiveObject.delete()
-				ActiveObject = 0
+				socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"m"})
 			}
 		}
 
@@ -239,9 +237,7 @@ $(document).ready(function(){
 			if(BoundDeckObject != 0 && ActiveObject.isdeck == 0)
 			{
 				//socket.emit("BottomDeckActiveCard", {"DeckID":BoundDeckObject.id, "CardSrc":ActiveObject.imgsrc})
-				socket.emit("BottomDeckActiveCard", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id})
-				ActiveObject.delete()
-				ActiveObject = 0
+				socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"m"})
 			}
 		}
 
@@ -260,7 +256,7 @@ $(document).ready(function(){
 		{
 			if(BoundDeckObject != 0 && ActiveObject.isdeck == 0)
 			{
-				socket.emit("TopDeckActiveCard", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id})
+				socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"t"})
 			}
 		}
 	})
@@ -318,24 +314,19 @@ $(document).ready(function(){
 		//ActiveObject = 0
 	})
 
-	socket.on("DeleteBoundDeckObject", function(data){
-		console.log(data.DeckID)
-		console.log(DecksAndCards)
-		DecksAndCards[data.DeckID].delete()
-		BoundDeckObject = 0
-		//delete DecksAndCards[data.DeckID]
+	socket.on("DeleteObject", function(data){
+		console.log(data.ObjectID)
+		console.log(data)
+		DecksAndCards[data.ObjectID].delete()
 	})
 
+/*
 	socket.on("DeleteActiveCardObject", function(data){
 		DecksAndCards[data.CardID].delete()
 		//ActiveObject.delete()
 		ActiveObject = 0
 	})
-
-
-	socket.on("TestBothSockets", function(data){
-		console.log("This has hit the create main window!!!")
-	})
+*/
 
 	socket.on("RoomCounters", function(data){
 		console.log(data)
