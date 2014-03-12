@@ -71,7 +71,7 @@ function cardobject(){
 					socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"m"})
 					break
 				case 66: // Keycode 66 = B (send card to Board)
-					socket.emit("ToBoard", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id})
+					socket.emit("CreateObject", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "type":"handtoboard"})
 					break
 				case 77: //Keycode 77 = M (Put card on bottoM of bound deck)
 					socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"m"})

@@ -76,7 +76,7 @@ function start(route, handle)
 	var server = http.createServer(onRequest);
 	sio = io.listen(server)
 	sio.set("log level", 1)
-	server.listen(8080, "127.0.0.1");
+	server.listen(80);
 
 
 	sio.sockets.on('connection', function(socket){
@@ -159,9 +159,9 @@ function start(route, handle)
 					MasterCardAndDeckStateObject[ObjectID].x = "0px"
 					MasterCardAndDeckStateObject[ObjectID].y = "200px"
 					console.log(MasterCardAndDeckStateObject)
-					GameWindowConnectionObject[address.address].emit
+					sio.sockets.in("mainwindows").emit("CreateObject", {"ObjectID":ObjectID, "ObjectSrc":data.deck, "x":"0px", "y":"200px", "type":"deck"})
 					//sio.sockets.emit("CreateObject", {"ObjectID":ObjectID, "ObjectSrc":data.deck, "x":"0px", "y":"200px", "type":"deck"})
-					GameWindowConnectionObject[address.address].emit("CreateObject", {"ObjectID":ObjectID, "ObjectSrc":data.deck, "x":"0px", "y":"200px", "type":"deck"})
+					//GameWindowConnectionObject[address.address].emit("CreateObject", {"ObjectID":ObjectID, "ObjectSrc":data.deck, "x":"0px", "y":"200px", "type":"deck"})
 				})
 				break
 			case "drawboard":
@@ -171,7 +171,8 @@ function start(route, handle)
 					MasterCardAndDeckStateObject[ObjectID].x = (Number((CDObject.x).replace("px", "")) + 360) + "px"
 					MasterCardAndDeckStateObject[ObjectID].y = Number((CDObject.y).replace("px", "")) + "px"
 					//sio.sockets.emit("CreateObject", {"ObjectSrc":CDObject.cardarray[0], "ObjectID":ObjectID, "x":MasterCardAndDeckStateObject[ObjectID].x, "y":MasterCardAndDeckStateObject[ObjectID].y, "type":"card"})
-					GameWindowConnectionObject[address.address].emit("CreateObject", {"ObjectSrc":CDObject.cardarray[0], "ObjectID":ObjectID, "x":MasterCardAndDeckStateObject[ObjectID].x, "y":MasterCardAndDeckStateObject[ObjectID].y, "type":"card"})
+					sio.sockets.in("mainwindows").emit("CreateObject", {"ObjectSrc":CDObject.cardarray[0], "ObjectID":ObjectID, "x":MasterCardAndDeckStateObject[ObjectID].x, "y":MasterCardAndDeckStateObject[ObjectID].y, "type":"card"})
+					//GameWindowConnectionObject[address.address].emit("CreateObject", {"ObjectSrc":CDObject.cardarray[0], "ObjectID":ObjectID, "x":MasterCardAndDeckStateObject[ObjectID].x, "y":MasterCardAndDeckStateObject[ObjectID].y, "type":"card"})
 					MasterCardAndDeckStateObject[ObjectID].cardarray = CDObject.cardarray.splice(0,1)
 				}
 				break
@@ -186,15 +187,15 @@ function start(route, handle)
 				}
 				break
 			case "boardtohand":
-				sio.socket.in("mainwindows").emit("DeleteObject", {"ObjectSrc":data.ObjectSrc, "ObjectID":data.ObjectID})
+				sio.sockets.in("mainwindows").emit("DeleteObject", {"ObjectSrc":data.ObjectSrc, "ObjectID":data.ObjectID})
 				//sio.sockets.emit("DeleteObject", {"ObjectSrc":data.ObjectSrc, "ObjectID":data.ObjectID})
 				MasterCardAndDeckStateObject[data.ObjectID].owner = address.address
 				HandWindowConnectionObject[address.address].emit("CreateObject", {"ObjectSrc":data.ObjectSrc, "ObjectID":data.ObjectID})
 				break
 			case "handtoboard":
-				HandWindowConnectionObject[address.address].emit("DeleteObject", {"ObjectSrc":data.ObjectSrc, "ObjectID":data.ObjectID})
-				MasterCardAndDeckStateObject[data.ObjectID].owner = address.address
-				sio.sockets.in("mainwindows").emit("CreateObject", {"CardSrc":data.ObjectSrc, "CardID":data.ObjectID})
+				//HandWindowConnectionObject[address.address].emit("DeleteObject", {"ObjectSrc":data.ObjectSrc, "ObjectID":data.ObjectID})
+				MasterCardAndDeckStateObject[data.ObjectID].owner = null
+				sio.sockets.in("mainwindows").emit("CreateObject", {"ObjectSrc":data.ObjectSrc, "ObjectID":data.ObjectID, "type":"card"})
 				break
 		}
     })
