@@ -144,135 +144,97 @@ $(document).ready(function(){
 	HandWindow = window.open("createhand", "Hand", "height=200,width=800")
 	document.addEventListener("keydown", function(e)
 	{
-		//Keycode 8 = backspace key (Delete card (not deck))
-		if(e.keyCode == 8)
+		switch(e.keyCode)
 		{
-			e.preventDefault()
-			if(ActiveObject != 0 && ActiveObject.isdeck == 0)
-			{
-				socket.emit("DeleteObject", {"ObjectID":ActiveObject.id})
-			}
-		}
+			case 8: //Keycode 8 = backspace key (Delete card (not deck))
+				e.preventDefault()
+				if(ActiveObject != 0 && ActiveObject.isdeck == 0){
+					socket.emit("DeleteObject", {"ObjectID":ActiveObject.id})
+				}
+				break
+			case 46: //Keycode 46 = Delete Key (Delete deck)
+				if(BoundDeckObject != 0){
+					socket.emit("DeleteObject", {"ObjectID":BoundDeckObject.id})
+				}
+				break
+			case 65: //Keycode 65 = A (Add to deck and shuffle)
+				if(ActiveObject != 0 && ActiveObject.isdeck == 0){
+					socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"m"})
+				}
+				break
+			case 66: //Keycode 66 = B (bind deck) for deck object
+				if(BoundDeckObject == 0 && ActiveObject.isdeck == 1){
+					ActiveObject.removeMouseListeners()
+					ActiveObject.setborder('2px solid #E8272C')
+					BoundDeckObject = ActiveObject
+					socket.emit("CurrentBoundDeckObject", {"DeckID":BoundDeckObject.id})
+				}
 
-
-		//Keycode 46 = Delete Key (Delete deck)
-		if(e.keyCode == 46)
-		{
-			if(BoundDeckObject != 0)
-			{
-				socket.emit("DeleteObject", {"ObjectID":BoundDeckObject.id})
-				//BoundDeckObject.delete()
-			}
-		}
-
-
-		//Keycode 65 = A (Add to deck and shuffle)
-		if(e.keyCode == 65)
-		{
-			if(ActiveObject != 0 && ActiveObject.isdeck == 0)
-			{
-				socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"m"})
-			}
-		}
-
-
-		//Keycode 66 = B (bind deck) for deck object
-		if(e.keyCode == 66)
-		{
-			if(BoundDeckObject == 0 && ActiveObject.isdeck == 1)
-			{
-				ActiveObject.removeMouseListeners()
-				ActiveObject.setborder('2px solid #E8272C')
-				BoundDeckObject = ActiveObject
-				socket.emit("CurrentBoundDeckObject", {"DeckID":BoundDeckObject.id})
-			}
-
-			if(BoundDeckObject !== ActiveObject && ActiveObject.isdeck == 1)
-			{
-				BoundDeckObject.addMouseListeners()
-				BoundDeckObject.setborder("")
-				BoundDeckObject = ActiveObject
-				BoundDeckObject.setborder('2px solid #E8272C')
-				BoundDeckObject.removeMouseListeners()
-				socket.emit("CurrentBoundDeckObject", {"DeckID":BoundDeckObject.id})
-			}
-		}
-
-		//Keycode 68 = D (draw card from bound deck to board)
-		if(e.keyCode == 68)
-		{
-			if(BoundDeckObject != 0)
-			{
-				console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
-				socket.emit("DrawCard")
-			}
-		}
-
-		//Keycode 71 = G (Grab the active card object and put it into your hand)
-		if(e.keyCode == 71)
-		{
-			if(ActiveObject != 0 && ActiveObject.isdeck == 0)
-			{
-				console.log(ActiveObject.imgsrc + "<-- This card has been grabbed")
-				//socket.emit("GrabCard", {"CardSRC":ActiveObject.imgsrc, "CardID":ActiveObject.id})
-				socket.emit("GrabCard", {"CardSRC":ActiveObject.imgsrc, "CardID":ActiveObject.id})
-				//ActiveObject.delete()
-				//ActiveObject = 0
-			}
-		}
-
-		//Keycode 72 = H (draw a card from bound deck to hand)
-		if(e.keyCode == 72)
-		{
-			if(BoundDeckObject != 0)
-			{
-				console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
-				socket.emit("DrawCardHand", {"DeckID":BoundDeckObject.id})
-			}
-		}
-
-		//Keycode 77 = M (Put card on bottoM of bound deck)
-		if(e.keyCode == 77)
-		{
-			if(BoundDeckObject != 0 && ActiveObject.isdeck == 0)
-			{
-				//socket.emit("BottomDeckActiveCard", {"DeckID":BoundDeckObject.id, "CardSrc":ActiveObject.imgsrc})
-				socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"m"})
-			}
-		}
-
-
-		//Keycode 83 = S (shuffle bound deck)
-		if(e.keyCode == 83)
-		{
-			if(BoundDeckObject != 0)
-			{
-				socket.emit("ShuffleDeck", {"DeckID":BoundDeckObject.id})
-			}
-		}
-
-		//Keycode 84 = T (add ActiveObject to top of deck)
-		if(e.keyCode == 84)
-		{
-			if(BoundDeckObject != 0 && ActiveObject.isdeck == 0)
-			{
-				socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"t"})
-			}
+				if(BoundDeckObject !== ActiveObject && ActiveObject.isdeck == 1){
+					BoundDeckObject.addMouseListeners()
+					BoundDeckObject.setborder("")
+					BoundDeckObject = ActiveObject
+					BoundDeckObject.setborder('2px solid #E8272C')
+					BoundDeckObject.removeMouseListeners()
+					socket.emit("CurrentBoundDeckObject", {"DeckID":BoundDeckObject.id})
+				}
+				break
+			case 68: //Keycode 68 = D (draw card from bound deck to board)
+				if(BoundDeckObject != 0){
+					console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
+					socket.emit("CreateObject", {"type":"drawboard"})
+				}
+				break
+			case 71: //Keycode 71 = G (Grab the active card object and put it into your hand)
+				if(ActiveObject != 0 && ActiveObject.isdeck == 0){
+					console.log(ActiveObject.imgsrc + "<-- This card has been grabbed")
+					//socket.emit("GrabCard", {"CardSRC":ActiveObject.imgsrc, "CardID":ActiveObject.id})
+					socket.emit("CreateObject", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "type":"boardtohand"})
+				}
+				break
+			case 72: //Keycode 72 = H (draw a card from bound deck to hand)
+				if(BoundDeckObject != 0){
+					console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
+					socket.emit("CreateObject", {"ObjectID":BoundDeckObject.id, "type":"drawhand"})
+				}
+				break
+			case 77: //Keycode 77 = M (Put card on bottoM of bound deck)
+				if(BoundDeckObject != 0 && ActiveObject.isdeck == 0){
+					socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"m"})
+				}
+				break
+			case 83: //Keycode 83 = S (shuffle bound deck)
+				if(BoundDeckObject != 0){
+					socket.emit("ShuffleDeck", {"DeckID":BoundDeckObject.id})
+				}
+				break
+			case 84: //Keycode 84 = T (add ActiveObject to top of deck)
+				if(BoundDeckObject != 0 && ActiveObject.isdeck == 0){
+					socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"t"})
+				}
+				break
 		}
 	})
 
 
-
-	socket.on("DrawCard", function(data){
-		console.log(data.CardSrc + "<-- this is the card name")
-		console.log(data.CardID + "<-- this is the card ID")
+	socket.on("CreateObject", function(data){
+		console.log(data.ObjectSrc + "<-- this is the card name")
+		console.log(data.ObjectID + "<-- this is the card ID")
 		console.log(data.x + "<-- this is the card x")
 		console.log(data.y + "<-- this is the card y")
+
 		ActiveObject = new DCobject()
-		ActiveObject.id = data.CardID
-		ActiveObject.isdeck = 0
-		DecksAndCards[data.CardID] = ActiveObject
-		ActiveObject.render(data.CardSrc, data.x, data.y)
+		ActiveObject.id = data.ObjectID
+
+		if(data.type == "deck"){
+			ActiveObject.isdeck = 1
+		}
+		if(data.type == "card"){
+			ActiveObject.isdeck = 0
+		}
+
+		DecksAndCards[data.ObjectID] = ActiveObject
+		ActiveObject.render(data.ObjectSrc, data.x, data.y)
 	})
 
 	socket.on("PositionDeck", function(data){
@@ -292,41 +254,11 @@ $(document).ready(function(){
 		ActiveObject.render(data.CardSrc)
 	})
 
-	socket.on("DeckID", function(data){
-		ActiveObject = new DCobject()
-		console.log(data.DeckID + "<--- this is the deckID of new deck..")
-		ActiveObject.id = data.DeckID
-		ActiveObject.isdeck = 1
-		ActiveObject.render("Deck", data.x, data.y)
-		DecksAndCards[data.DeckID] = ActiveObject
-		//alert(data.ID)
-		console.log("***********************")
-		console.log(ActiveObject.id)
-		console.log(data)
-		console.log("***********************")
-	})
-
-	socket.on("GrabCard", function(data){
-		console.log(DecksAndCards)
-		console.log(data.CardID + "<-- this is the data card ID!")
-		DecksAndCards[data.CardID].delete()
-		//delete DecksAndCards[data.CardID]
-		//ActiveObject = 0
-	})
-
 	socket.on("DeleteObject", function(data){
 		console.log(data.ObjectID)
 		console.log(data)
 		DecksAndCards[data.ObjectID].delete()
 	})
-
-/*
-	socket.on("DeleteActiveCardObject", function(data){
-		DecksAndCards[data.CardID].delete()
-		//ActiveObject.delete()
-		ActiveObject = 0
-	})
-*/
 
 	socket.on("RoomCounters", function(data){
 		console.log(data)
@@ -368,7 +300,7 @@ $(document).ready(function(){
 			{
 				return function()
 				{
-					socket.emit("CreateDeck", {'deck':namestring})
+					socket.emit("CreateObject", {'deck':namestring, "type":"newdeck"})
 					//ActiveObject = new deckobject()
 					//ActiveObject.createdeck(namestring)
 				}
