@@ -218,7 +218,7 @@ $(document).ready(function(){
 
 
 	socket.on("CreateObject", function(data){
-		console.log(data.CardSrc + "<-- this is the card name")
+		console.log(data.ObjectSrc + "<-- this is the card name")
 		console.log(data.ObjectID + "<-- this is the card ID")
 		console.log(data.x + "<-- this is the card x")
 		console.log(data.y + "<-- this is the card y")
@@ -236,24 +236,6 @@ $(document).ready(function(){
 		DecksAndCards[data.ObjectID] = ActiveObject
 		ActiveObject.render(data.ObjectSrc, data.x, data.y)
 	})
-
-	/*
-	socket.on("DeckID", function(data){
-		ActiveObject = new DCobject()
-		ActiveObject.id = data.DeckID
-		ActiveObject.isdeck = 1
-		ActiveObject.render("Deck", data.x, data.y)
-		DecksAndCards[data.DeckID] = ActiveObject
-
-
-		//alert(data.ID)
-		console.log("***********************")
-		console.log(ActiveObject.id)
-		console.log(data)
-		console.log("***********************")
-	})
-	*/
-
 
 	socket.on("PositionDeck", function(data){
 		console.log(data.DeckID)
