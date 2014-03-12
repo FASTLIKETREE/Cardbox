@@ -182,19 +182,20 @@ $(document).ready(function(){
 			case 68: //Keycode 68 = D (draw card from bound deck to board)
 				if(BoundDeckObject != 0){
 					console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
-					socket.emit("DrawCard")
+					socket.emit("CreateObject", {"type":"drawboard"})
 				}
 				break
 			case 71: //Keycode 71 = G (Grab the active card object and put it into your hand)
 				if(ActiveObject != 0 && ActiveObject.isdeck == 0){
 					console.log(ActiveObject.imgsrc + "<-- This card has been grabbed")
-					socket.emit("GrabCard", {"CardSRC":ActiveObject.imgsrc, "CardID":ActiveObject.id})
+					//socket.emit("GrabCard", {"CardSRC":ActiveObject.imgsrc, "CardID":ActiveObject.id})
+					socket.emit("CreateObject", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "type":"boardtohand"})
 				}
 				break
 			case 72: //Keycode 72 = H (draw a card from bound deck to hand)
 				if(BoundDeckObject != 0){
 					console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
-					socket.emit("DrawCardHand", {"DeckID":BoundDeckObject.id})
+					socket.emit("CreateObject", {"ObjectID":BoundDeckObject.id, "type":"drawhand"})
 				}
 				break
 			case 77: //Keycode 77 = M (Put card on bottoM of bound deck)
@@ -216,18 +217,43 @@ $(document).ready(function(){
 	})
 
 
-
-	socket.on("DrawCard", function(data){
+	socket.on("CreateObject", function(data){
 		console.log(data.CardSrc + "<-- this is the card name")
-		console.log(data.CardID + "<-- this is the card ID")
+		console.log(data.ObjectID + "<-- this is the card ID")
 		console.log(data.x + "<-- this is the card x")
 		console.log(data.y + "<-- this is the card y")
+
 		ActiveObject = new DCobject()
-		ActiveObject.id = data.CardID
-		ActiveObject.isdeck = 0
-		DecksAndCards[data.CardID] = ActiveObject
-		ActiveObject.render(data.CardSrc, data.x, data.y)
+		ActiveObject.id = data.ObjectID
+
+		if(data.type == "deck"){
+			ActiveObject.isdeck = 1
+		}
+		if(data.type == "card"){
+			ActiveObject.isdeck = 0
+		}
+
+		DecksAndCards[data.ObjectID] = ActiveObject
+		ActiveObject.render(data.ObjectSrc, data.x, data.y)
 	})
+
+	/*
+	socket.on("DeckID", function(data){
+		ActiveObject = new DCobject()
+		ActiveObject.id = data.DeckID
+		ActiveObject.isdeck = 1
+		ActiveObject.render("Deck", data.x, data.y)
+		DecksAndCards[data.DeckID] = ActiveObject
+
+
+		//alert(data.ID)
+		console.log("***********************")
+		console.log(ActiveObject.id)
+		console.log(data)
+		console.log("***********************")
+	})
+	*/
+
 
 	socket.on("PositionDeck", function(data){
 		console.log(data.DeckID)
@@ -244,28 +270,6 @@ $(document).ready(function(){
 		ActiveObject.isdeck = 0
 		DecksAndCards[data.CardID] = ActiveObject
 		ActiveObject.render(data.CardSrc)
-	})
-
-	socket.on("DeckID", function(data){
-		ActiveObject = new DCobject()
-		console.log(data.DeckID + "<--- this is the deckID of new deck..")
-		ActiveObject.id = data.DeckID
-		ActiveObject.isdeck = 1
-		ActiveObject.render("Deck", data.x, data.y)
-		DecksAndCards[data.DeckID] = ActiveObject
-		//alert(data.ID)
-		console.log("***********************")
-		console.log(ActiveObject.id)
-		console.log(data)
-		console.log("***********************")
-	})
-
-	socket.on("GrabCard", function(data){
-		console.log(DecksAndCards)
-		console.log(data.CardID + "<-- this is the data card ID!")
-		DecksAndCards[data.CardID].delete()
-		//delete DecksAndCards[data.CardID]
-		//ActiveObject = 0
 	})
 
 	socket.on("DeleteObject", function(data){
@@ -314,7 +318,7 @@ $(document).ready(function(){
 			{
 				return function()
 				{
-					socket.emit("CreateDeck", {'deck':namestring})
+					socket.emit("CreateObject", {'deck':namestring, "type":"newdeck"})
 					//ActiveObject = new deckobject()
 					//ActiveObject.createdeck(namestring)
 				}
