@@ -41,14 +41,14 @@ function cardobject(){
 		imageobject.parentNode.removeChild(imageobject)
 	}
 
-	this.rendercard = function (cardname)
+	this.rendercard = function (cardname, x, y)
 	{
 		imageobject.src = cardname
 		console.log(cardname)
 		//this.id=cardname
 		imageobject.style.position="absolute"
-		imageobject.style.left = "300px"
-		imageobject.style.top = "0px"
+		imageobject.style.left = x
+		imageobject.style.top = y
 		imageobject.setAttribute("class", "drag")
 		imageobject.addEventListener("mouseenter", mouseenter, false)
 		imageobject.addEventListener("mouseleave", mouseleave, false)
@@ -63,21 +63,20 @@ function cardobject(){
 		if(ActiveObject != 0){
 			switch(e.keyCode){
 				case 8: //Keycode 8 = backspace key (Delete card (not deck))
-					// This will eventually need to communicate with the server to let it know that it has permanently deleted something from your hand
-					// This information will be passed to all people in chat rooms so they can see a log of the things that are going on
+					socket.emit("DeleteObject", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id})
 					break
 				case 65: //Keycode 65 = A (Add to deck and shuffle)
 					//socket.emit("AddDeckActiveCardAndShuffle", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id})
-					socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"m"})
+					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "Key":"m"})
 					break
 				case 66: // Keycode 66 = B (send card to Board)
-					socket.emit("ToBoard", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id})
+					socket.emit("CreateObject", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "type":"handtoboard"})
 					break
 				case 77: //Keycode 77 = M (Put card on bottoM of bound deck)
-					socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"m"})
+					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "Key":"m"})
 					break
 				case 84: //Keycode 84 = T (add ActiveObject to top of deck)
-					socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"t"})
+					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "Key":"t"})
 					break
 			}
 			ActiveObject.delete()
@@ -94,7 +93,7 @@ function cardobject(){
 		ActiveObject = CardsObject[data.ObjectID]
 		ActiveObject.id = data.ObjectID
 		ActiveObject.imgsrc = data.ObjectSrc
-		ActiveObject.rendercard(data.ObjectSrc)
+		ActiveObject.rendercard(data.ObjectSrc, data.x, data.y)
 	})
 
 /*

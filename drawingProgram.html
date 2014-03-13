@@ -83,10 +83,10 @@ function DCobject(){
 			this.imgsrc = "pictures/AnotherGroupOfCards/Deck.png"
 			imageobject.src = "pictures/AnotherGroupOfCards/Deck.png"
 			imageobject.style.position="absolute"
-			console.log("X location = " + x + "px")
-			console.log("Y location = " + y + "px")
-			imageobject.style.left = (x)
-			imageobject.style.top = (y)
+			console.log("X location = " + x)
+			console.log("Y location = " + y)
+			imageobject.style.left = x
+			imageobject.style.top = y
 			imageobject.setAttribute("class", "drag")
 			imageobject.addEventListener("mouseenter", mouseenter, false)
 			imageobject.addEventListener("mouseleave", mouseleave, false)
@@ -115,14 +115,9 @@ function DCobject(){
 		delete DecksAndCards[this.id]
 		imageobject.parentNode.removeChild(imageobject)
 		ActiveObject = 0
-		if(this.isdeck == 1)
-		{
+		if(this.isdeck == 1){
 			socket.emit("DeleteDeck", {"DeckID":this.id})
 			BoundDeckObject = 0
-		}
-		else
-		{
-		 // This shouldn't be an if else statement, this should be a single thing - should delete decks or cards, makes no difference
 		}
 	}
 
@@ -159,7 +154,7 @@ $(document).ready(function(){
 				break
 			case 65: //Keycode 65 = A (Add to deck and shuffle)
 				if(ActiveObject != 0 && ActiveObject.isdeck == 0){
-					socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"m"})
+					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "Key":"m"})
 				}
 				break
 			case 66: //Keycode 66 = B (bind deck) for deck object
@@ -200,7 +195,7 @@ $(document).ready(function(){
 				break
 			case 77: //Keycode 77 = M (Put card on bottoM of bound deck)
 				if(BoundDeckObject != 0 && ActiveObject.isdeck == 0){
-					socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"m"})
+					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "Key":"m"})
 				}
 				break
 			case 83: //Keycode 83 = S (shuffle bound deck)
@@ -210,7 +205,7 @@ $(document).ready(function(){
 				break
 			case 84: //Keycode 84 = T (add ActiveObject to top of deck)
 				if(BoundDeckObject != 0 && ActiveObject.isdeck == 0){
-					socket.emit("AddToDeck", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id, "Key":"t"})
+					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "Key":"t"})
 				}
 				break
 		}
@@ -218,7 +213,7 @@ $(document).ready(function(){
 
 
 	socket.on("CreateObject", function(data){
-		console.log(data.CardSrc + "<-- this is the card name")
+		console.log(data.ObjectSrc + "<-- this is the card name")
 		console.log(data.ObjectID + "<-- this is the card ID")
 		console.log(data.x + "<-- this is the card x")
 		console.log(data.y + "<-- this is the card y")
@@ -229,31 +224,13 @@ $(document).ready(function(){
 		if(data.type == "deck"){
 			ActiveObject.isdeck = 1
 		}
-		if(data.type == "card"){
+		else{
 			ActiveObject.isdeck = 0
 		}
 
 		DecksAndCards[data.ObjectID] = ActiveObject
 		ActiveObject.render(data.ObjectSrc, data.x, data.y)
 	})
-
-	/*
-	socket.on("DeckID", function(data){
-		ActiveObject = new DCobject()
-		ActiveObject.id = data.DeckID
-		ActiveObject.isdeck = 1
-		ActiveObject.render("Deck", data.x, data.y)
-		DecksAndCards[data.DeckID] = ActiveObject
-
-
-		//alert(data.ID)
-		console.log("***********************")
-		console.log(ActiveObject.id)
-		console.log(data)
-		console.log("***********************")
-	})
-	*/
-
 
 	socket.on("PositionDeck", function(data){
 		console.log(data.DeckID)
