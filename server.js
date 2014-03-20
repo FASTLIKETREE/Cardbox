@@ -285,7 +285,9 @@ function start(route, handle)
 		console.log(MasterCardAndDeckStateObject)
 	})
 
-
+	socket.on("CommandLineSend", function(data){
+		console.log(data.CommandLineRaw + "<-- this is the command line")
+	})
 	//This is called when the client starts, it looks through the deck folder and gathers up all the directory names and card names, this info is passed to the client which then
 	//creates a button that can be used to view the decks of cards
 	socket.on("PopulateDecks", function(){

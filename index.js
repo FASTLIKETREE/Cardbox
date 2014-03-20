@@ -10,7 +10,8 @@ handle["/game"] = requestHandlers.start;
 handle["/picture"] = requestHandlers.pictures;
 handle["/viewdeck"] = requestHandlers.viewdeck;
 handle["/createhand"] = requestHandlers.createhand;
-handle["/roomselect"] = requestHandlers.roomselect
+handle["/roomselect"] = requestHandlers.roomselect;
+handle["/commandwindow"] = requestHandlers.commandwindow;
 //handle["/Laboratory.png"] = requestHandlers.lab;
 
 
