@@ -1,0 +1,131 @@
+<html>
+<head>
+
+    <meta charset="utf-8"/>
+    <title>Demo</title>
+<style type="text/css">
+
+#commandwindowcontainer
+{
+	height: 250px;
+	width:250px;
+	background:#f00;
+	overflow: scroll;
+}
+
+#commandwindow
+{
+	//position: aboslute;
+	top: 0px;
+	left: 0px;
+
+	width: 200px;
+	height: 200px;
+	background-color: red;
+
+	display: table-cell;
+    vertical-align: bottom;
+	//overflow: scroll;
+}
+
+#commandline{
+    resize: none;
+	width: 200px;
+	height: 60px;
+	background-color: blue;
+}
+
+</style>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
+
+<script>
+
+$(document).ready(function(){
+	var rooms = 9
+
+	socket = io.connect();
+	socket.emit("JoinLobby")
+
+	document.addEventListener("keydown", function(e)
+	{
+		console.log(e.keyCode + "<-- this is the keycode")
+		switch(e.keyCode)
+		{
+			case 13:
+			if(e.shiftKey){
+				console.log("This is shift enter, it will go to the next line instead of submitting the shit")
+
+			}else{
+				e.preventDefault()
+				console.log("This should send the mail, this will send to all the people i guess?")
+
+				var cmdline = document.getElementById("commandline");
+				if(cmdline.value != ""){
+					var cmdwnd = document.getElementById("commandwindow");
+					var cmdwndcontainer = document.getElementById("commandwindowcontainer");
+					console.log(cmdwndcontainer.scrollTop + "<-- this is the scrollTop value!")
+					console.log(cmdwndcontainer.scrollHeight + "<-- this is the scrollHeight!")
+
+
+						var scrollHeight = Math.max(cmdwndcontainer.scrollHeight, cmdwndcontainer.clientHeight);
+						cmdwndcontainer.scrollTop = scrollHeight - cmdwndcontainer.clientHeight;
+
+
+					socket.emit("CommandLineSend", {"CommandLineRaw":cmdline.value})
+					var HTMLText = cmdline.value
+					HTMLText = HTMLText.replace(/\r?\n/g, '<br />');
+					cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
+					console.log(cmdline.value + "<-- this is the current innerHTML")
+					cmdline.value = ""
+				}
+			}
+			break
+		}
+
+	})
+	/*
+	var user = prompt("Enter your name, or don't")
+	while(1)
+	{
+		if(user == null)
+		{
+			user = prompt("Enter your name, or don't")
+		}
+		else
+		{
+			break
+		}
+	}
+	*/
+})
+function ResizeWindow()
+{
+	var cmdwnd = document.getElementById("commandwindow");
+	//alert("This has resized")
+	console.log("The fuck is going on here?");
+	console.log($(window).height() + "<-- this is the window height");
+	console.log($(window).width() + "<-- this is the window width");
+	cmdwnd.style.width = $(window).width() - 100;
+	cmdwnd.style.height = $(window).height() - 100;
+
+	var cmdline = document.getElementById("commandline");
+	cmdline.style.width = $(window).width() - 100;
+
+	var container = document.getElementById("commandwindowcontainer");
+	container.style.width = $(window).width() - 100;
+	container.style.height = $(window).height() - 100;
+}
+
+</script>
+</head>
+
+<body onresize="ResizeWindow()">
+<div id=commandwindowcontainer>
+<div id=commandwindow></div>
+</div>
+<textarea id=commandline></textarea>
+
+</body>
+</html>

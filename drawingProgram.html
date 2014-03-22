@@ -139,6 +139,7 @@ window.onbeforeunload = function ()
 $(document).ready(function(){
 	HandWindow = window.open("createhand", "Hand", "height=400,width=1200")
 	CommandWindow = window.open("commandwindow", "CommandWindow", "height=400,width=1200")
+
 	document.addEventListener("keydown", function(e)
 	{
 		switch(e.keyCode)
@@ -261,6 +262,7 @@ $(document).ready(function(){
 		console.log(data)
 	})
 
+	socket.on("CreateStandardGameElements")
 
 	socket.on('DecksDir', function(data){
 		data = data.slice(0, data.length -1)

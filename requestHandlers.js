@@ -139,6 +139,18 @@ function carddir(response, postData)
 	})
 }
 
+<<<<<<< HEAD
+=======
+function commandwindow(response, postData)
+{
+	fs.readFile("C:/AANode/CommandWindow.html", "utf8", function(err, data) {
+	response.writeHead(200, {"Content-Type": "text/html"});
+	response.write(data);
+	response.end();
+	});
+}
+
+>>>>>>> 7c544da38390b4e3aee90f041ddf977da83b82f3
 exports.commandwindow = commandwindow
 exports.roomselect = roomselect
 exports.viewdeck = viewdeck;
