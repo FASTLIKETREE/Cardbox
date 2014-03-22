@@ -5,6 +5,14 @@
     <title>Demo</title>
 <style type="text/css">
 
+#commandwindowcontainer
+{
+	height: 250px;
+	width:250px;
+	background:#f00;
+	overflow: scroll;
+}
+
 #commandwindow
 {
 	//position: aboslute;
@@ -17,7 +25,7 @@
 
 	display: table-cell;
     vertical-align: bottom;
-	overflow-y: auto;
+	//overflow: scroll;
 }
 
 #commandline{
@@ -52,9 +60,19 @@ $(document).ready(function(){
 			}else{
 				e.preventDefault()
 				console.log("This should send the mail, this will send to all the people i guess?")
+
 				var cmdline = document.getElementById("commandline");
 				if(cmdline.value != ""){
 					var cmdwnd = document.getElementById("commandwindow");
+					var cmdwndcontainer = document.getElementById("commandwindowcontainer");
+					console.log(cmdwndcontainer.scrollTop + "<-- this is the scrollTop value!")
+					console.log(cmdwndcontainer.scrollHeight + "<-- this is the scrollHeight!")
+
+
+						var scrollHeight = Math.max(cmdwndcontainer.scrollHeight, cmdwndcontainer.clientHeight);
+						cmdwndcontainer.scrollTop = scrollHeight - cmdwndcontainer.clientHeight;
+
+
 					socket.emit("CommandLineSend", {"CommandLineRaw":cmdline.value})
 					var HTMLText = cmdline.value
 					HTMLText = HTMLText.replace(/\r?\n/g, '<br />');
@@ -94,13 +112,19 @@ function ResizeWindow()
 
 	var cmdline = document.getElementById("commandline");
 	cmdline.style.width = $(window).width() - 100;
+
+	var container = document.getElementById("commandwindowcontainer");
+	container.style.width = $(window).width() - 100;
+	container.style.height = $(window).height() - 100;
 }
 
 </script>
 </head>
 
 <body onresize="ResizeWindow()">
+<div id=commandwindowcontainer>
 <div id=commandwindow></div>
+</div>
 <textarea id=commandline></textarea>
 
 </body>
