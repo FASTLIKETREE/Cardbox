@@ -139,8 +139,6 @@ function carddir(response, postData)
 	})
 }
 
-<<<<<<< HEAD
-=======
 function commandwindow(response, postData)
 {
 	fs.readFile("C:/AANode/CommandWindow.html", "utf8", function(err, data) {
@@ -150,7 +148,6 @@ function commandwindow(response, postData)
 	});
 }
 
->>>>>>> 7c544da38390b4e3aee90f041ddf977da83b82f3
 exports.commandwindow = commandwindow
 exports.roomselect = roomselect
 exports.viewdeck = viewdeck;
