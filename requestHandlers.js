@@ -55,6 +55,16 @@ function createhand(response, postData)
 	});
 }
 
+function commandwindow(response, postData)
+{
+	fs.readFile("C:/AANode/CommandWindow.html", "utf8", function(err, data) {
+	response.writeHead(200, {"Content-Type": "text/html"});
+	response.write(data);
+	response.end();
+	})
+
+}
+
 function viewdeck(response, postData)
 {
 	console.log(postData + "<--- this is the post data")
@@ -129,6 +139,7 @@ function carddir(response, postData)
 	})
 }
 
+exports.commandwindow = commandwindow
 exports.roomselect = roomselect
 exports.viewdeck = viewdeck;
 exports.start = start;
