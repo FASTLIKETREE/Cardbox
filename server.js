@@ -82,7 +82,7 @@ function start(route, handle)
 	var server = http.createServer(onRequest);
 	sio = io.listen(server)
 	sio.set("log level", 1)
-	server.listen(80)
+	server.listen(8080, "127.0.0.1")
 
 
 	sio.sockets.on('connection', function(socket){

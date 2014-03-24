@@ -56,8 +56,11 @@
 <script>
 
 $(document).ready(function(){
+	var RootReplaceKey = "c:\AANode\Pictures"
+
 	var rooms = 9
-	var CurrentDirectory = "c:\\"
+	//var CurrentDirectory = "root:\>"
+	var CurrentDirectory = "C:\\AANode\\pictures"
 	socket = io.connect();
 	socket.emit("CommandWindowCreated")
 	socket.emit("GetDirectoryStructure")
@@ -67,7 +70,7 @@ $(document).ready(function(){
 
 	document.addEventListener("keydown", function(e)
 	{
-		console.log(e.keyCode + "<-- this is the keycode")
+		//console.log(e.keyCode + "<-- this is the keycode")
 		switch(e.keyCode)
 		{
 			case 13:
@@ -84,22 +87,53 @@ $(document).ready(function(){
 
 					switch(cmdline.value){
 						case "dir":
+							var cmdwnd = document.getElementById("commandwindow");
+							console.log(CurrentDirectory + "<- this is the current directory")
+							console.log(LocalDirectoryStructureObject + "<-- local dir structure reference object")
+							console.log(LocalDirectoryStructureObject[CurrentDirectory] + "<- this is the object again...")
+							console.log(LocalDirectoryStructureObject.CurrentDirectory + "<- this is the object again...")
+							var FilesAndDirsCurrentDirectory = LocalDirectoryStructureObject[CurrentDirectory]
+							console.log(FilesAndDirsCurrentDirectory + "<-- this is the directory files and dirts after selecting object")
+							console.log("Is this the split htat is faliing?")
+							SplitFilesDirs = FilesAndDirsCurrentDirectory.split(";")
 
+							if(SplitFilesDirs[0] != "undefined"){
+								var DirText = ""
+								console.log("What is going on here? this is the 2nd one")
+								SplitDirs = SplitFilesDirs[0].split(",")
+								for(var i = 0; i<SplitDirs.length; ++i){
+									DirText = DirText + "Dir\>\t" + SplitDirs[i] + "<br/>"
+								}
+							}
+
+							if(SplitFilesDirs[1] != "undefined"){
+								var FileText = ""
+								console.log("What is going on here?")
+								SplitFiles = SplitFilesDirs[1].split(",")
+								for(var i = 0; i<SplitFiles.length; ++i){
+									FileText = FileText + "File\t" + SplitFiles[i] + "<br/>"
+								}
+							}
+
+							var HTMLText = FileText + DirText
+							//HTMLText = HTMLText.replace(/\r?\n/g, '<br/>');
+							cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
+
+							ScrollToEndOfChatBox()
 							break
 						case "ls":
 
 							break
 						default:
 							var cmdwnd = document.getElementById("commandwindow");
-							var cmdwndcontainer = document.getElementById("commandwindowcontainer");
+
 							socket.emit("CommandLineSend", {"CommandLineRaw":cmdline.value})
 							var HTMLText = cmdline.value
 							HTMLText = HTMLText.replace(/\r?\n/g, '<br />');
 							cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
 							console.log(cmdline.value + "<-- this is the current innerHTML")
 
-							var scrollHeight = Math.max(cmdwndcontainer.scrollHeight, cmdwndcontainer.clientHeight);
-							cmdwndcontainer.scrollTop = scrollHeight - cmdwndcontainer.clientHeight;
+							ScrollToEndOfChatBox()
 							cmdline.value = ""
 							break
 					}
@@ -110,7 +144,6 @@ $(document).ready(function(){
 
 	})
 
-})
 
 
 	socket.on("CommandLineRecv", function(data){
@@ -118,14 +151,22 @@ $(document).ready(function(){
 		var HTMLText = data.CommandlineRaw
 		HTMLText = HTMLText.replace(/\r?\n/g, '<br />');
 		cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
-
-		var scrollHeight = Math.max(cmdwndcontainer.scrollHeight, cmdwndcontainer.clientHeight);
-		cmdwndcontainer.scrollTop = scrollHeight - cmdwndcontainer.clientHeight;
+		ScrollToEndOfChatBox()
 	})
 
 	socket.on("DirectoryStructure", function(data){
+		console.log("Does this ever get to the directory structure??!??")
+		LocalDirectoryStructureObject = data.DirectoryStructure
+		//jQuery.extend(LocalDirectoryStructureObject, data.DirectoryStructure)
+		//LocalDirectoryStructureObject = data.DirectoryStructure
 		console.log(data.DirectoryStructure)
+		console.log(LocalDirectoryStructureObject)
 	})
+
+})
+
+
+
 
 	/*
 	var user = prompt("Enter your name, or don't")
@@ -140,7 +181,15 @@ $(document).ready(function(){
 			break
 		}
 	}
-	*/
+*/
+
+function ScrollToEndOfChatBox(){
+	var cmdwndcontainer = document.getElementById("commandwindowcontainer");
+	var scrollHeight = Math.max(cmdwndcontainer.scrollHeight, cmdwndcontainer.clientHeight);
+	cmdwndcontainer.scrollTop = scrollHeight - cmdwndcontainer.clientHeight;
+}
+
+
 function ResizeWindow()
 {
 	var cmdwnd = document.getElementById("commandwindow");
@@ -161,8 +210,7 @@ function ResizeWindow()
 	cmdwndcontainer.style.width = $(window).width() - 100;
 	cmdwndcontainer.style.height = $(window).height() - 100;
 
-	var scrollHeight = Math.max(cmdwndcontainer.scrollHeight, cmdwndcontainer.clientHeight);
-	cmdwndcontainer.scrollTop = scrollHeight - cmdwndcontainer.clientHeight;
+	ScrollToEndOfChatBox()
 }
 
 </script>
