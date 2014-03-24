@@ -4,9 +4,11 @@ var fs = require("fs");
 var io = require("C:\\Program Files\\nodejs\\node_modules\\socket.io")
 var qs = require("querystring")
 
-MasterConnectionObject = {};
 GameWindowConnectionObject = {};
 HandWindowConnectionObject = {};
+CommandWindowConnectionObject = {};
+DirectoryStructureObject = {};
+
 IDReaperArray = [];
 
 MasterCardAndDeckStateObject = {}
@@ -21,6 +23,9 @@ MasterCardAndDeckStateObject = {}
 CurrentlySelectedDeckID = -1
 UniqueIDCounter = 1
 RoomCount = 0
+
+PopulateDirectoryStructure("C:\\AANode\\pictures")
+
 function DeckOrCardObject()
 {
 	this.x = null
@@ -122,6 +127,14 @@ function start(route, handle)
 				socket.emit("CreateObject", {"ObjectSrc":MasterCardAndDeckStateObject[key].cardarray[0], "ObjectID":key, "x":MasterCardAndDeckStateObject[key].x, "y":MasterCardAndDeckStateObject[key].y, "type":"card"})
 			}
 		}
+	})
+
+	socket.on("CommandWindowCreated", function(){
+		CommandWindowConnectionObject[address.address] = socket
+
+		socket.join("commandwindows")
+		console.log("Command window has been created");
+
 	})
 
 /*
@@ -287,6 +300,14 @@ function start(route, handle)
 
 	socket.on("CommandLineSend", function(data){
 		console.log(data.CommandLineRaw + "<-- this is the command line")
+		//console.log(io.sockets.manager.rooms)
+		//socket.broadcast.to("commandwindows").emit("CommandLineRecv", {"CommandlineRaw":data.CommandLineRaw})
+		socket.broadcast.to("commandwindows").emit("CommandLineRecv", {"CommandlineRaw":data.CommandLineRaw})
+		//socket.emit("CommandLineRecv", {"CommandlineRaw":data.CommandLineRaw})
+	})
+
+	socket.on("GetDirectoryStructure", function(){
+		socket.emit("DirectoryStructure", {"DirectoryStructure": DirectoryStructureObject})
 	})
 	//This is called when the client starts, it looks through the deck folder and gathers up all the directory names and card names, this info is passed to the client which then
 	//creates a button that can be used to view the decks of cards
@@ -294,13 +315,14 @@ function start(route, handle)
 		var PopulateDecksString = ""
 		fs.readdir("C:\\AANode\\pictures", function(err, files){
 
-			//console.log(files.length + "<-- this is the FILES LENGTH THIS HAS TO BE SOMETHIGN!")
+			console.log(files.length + "<-- this is the FILES LENGTH THIS HAS TO BE SOMETHIGN!")
 			for(var i = 0; i<files.length; ++i)
 			{
 				(function(i) {
-					console.log("-")
+					console.log("--> this is I " + i)
 					var cards = fs.readdir("C:\\AANode\\pictures\\" + files[i], function(err, cards){
 						PopulateDecksString = PopulateDecksString + files[i] + ","
+						console.log(PopulateDecksString + "<- this is the populate decks string")
 						PopulateDecksString = PopulateDecksString + cards.length + "," + cards.join() + ";";
 						//ReturnArray.push(files[i], cards.length)
 						//ReturnArray = ReturnArray.concat(cards);
@@ -336,6 +358,55 @@ function start(route, handle)
 	console.log("Server has started.");
 }
 
+function PopulateDirectoryStructure(BaseDirectories){
+	//$CurrentDirectoryFileIteration = ""
+	console.log("STARTING ITERATION-----------------")
+
+	Directories = BaseDirectories.split(",")
+	console.log(BaseDirectories)
+	console.log(Directories)
+	for(var i = 0; i < Directories.length; ++i)
+	{
+		FilesString = ""
+		DirectoryString = ""
+		DirectoryPassString = ""
+
+		DirectoryReturnArray = fs.readdirSync(Directories[i])
+		console.log(DirectoryReturnArray)
+		for(j = 0; j<DirectoryReturnArray.length; ++j)
+		{
+			StatObject = fs.statSync(Directories[i] + "\\" + DirectoryReturnArray[j])
+
+			if(StatObject.isFile()){
+				//FilesString = FilesString + Directories[i] + "\\" + DirectoryReturnArray[j] + ","
+				FilesString = FilesString + DirectoryReturnArray[j] + ","
+			}
+
+			if(StatObject.isDirectory()){
+				DirectoryPassString = DirectoryPassString + Directories[i] + "\\" + DirectoryReturnArray[j] + ","
+				DirectoryString = DirectoryString + DirectoryReturnArray[j] + ","
+			}
+		}
+
+		FilesString = FilesString.substring(0, (FilesString.length - 1))
+		DirectoryString = DirectoryString.substring(0, (DirectoryString.length - 1))
+		DirectoryPassString = DirectoryPassString.substring(0, (DirectoryPassString.length - 1))
+
+		console.log("--------")
+		console.log(FilesString)
+		console.log(DirectoryString)
+		console.log(DirectoryPassString)
+		console.log("++++++++")
+
+		DirectoryStructureObject[Directories[i]] = DirectoryString + ";" + FilesString
+	}
+	console.log(DirectoryStructureObject)
+	console.log("ENDING ITERATION-----------------")
+	if(DirectoryPassString.length > 0){
+		PopulateDirectoryStructure(DirectoryPassString)
+	}
+
+}
 
 function shuffle(array) {
   var m = array.length, t, i;

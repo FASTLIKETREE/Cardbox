@@ -7,10 +7,10 @@
 
 #commandwindowcontainer
 {
-	height: 250px;
-	width:250px;
+	height: 200px;
+	width: 600px;
 	background:#f00;
-	overflow: scroll;
+	overflow: auto;
 }
 
 #commandwindow
@@ -19,8 +19,9 @@
 	top: 0px;
 	left: 0px;
 
-	width: 200px;
 	height: 200px;
+	width: 600px;
+
 	background-color: red;
 
 	display: table-cell;
@@ -28,11 +29,23 @@
 	//overflow: scroll;
 }
 
+#currentdirectory{
+	top: 600px;
+	left: 0px;
+	width: 600px;
+	height: 20px;
+	background-color: brown;
+}
+
+
+
 #commandline{
     resize: none;
-	width: 200px;
+	width: 600px;
 	height: 60px;
 	background-color: blue;
+	white-space: nowrap;
+	overflow: auto;
 }
 
 </style>
@@ -44,9 +57,13 @@
 
 $(document).ready(function(){
 	var rooms = 9
-
+	var CurrentDirectory = "c:\\"
 	socket = io.connect();
-	socket.emit("JoinLobby")
+	socket.emit("CommandWindowCreated")
+	socket.emit("GetDirectoryStructure")
+
+	var commandwindowdirectorydiv = document.getElementById("currentdirectory");
+	commandwindowdirectorydiv.innerHTML = "c:\\"
 
 	document.addEventListener("keydown", function(e)
 	{
@@ -57,34 +74,59 @@ $(document).ready(function(){
 			if(e.shiftKey){
 				console.log("This is shift enter, it will go to the next line instead of submitting the shit")
 
-			}else{
+			}
+			else{
 				e.preventDefault()
 				console.log("This should send the mail, this will send to all the people i guess?")
 
 				var cmdline = document.getElementById("commandline");
 				if(cmdline.value != ""){
-					var cmdwnd = document.getElementById("commandwindow");
-					var cmdwndcontainer = document.getElementById("commandwindowcontainer");
-					console.log(cmdwndcontainer.scrollTop + "<-- this is the scrollTop value!")
-					console.log(cmdwndcontainer.scrollHeight + "<-- this is the scrollHeight!")
 
+					switch(cmdline.value){
+						case "dir":
 
-						var scrollHeight = Math.max(cmdwndcontainer.scrollHeight, cmdwndcontainer.clientHeight);
-						cmdwndcontainer.scrollTop = scrollHeight - cmdwndcontainer.clientHeight;
+							break
+						case "ls":
 
+							break
+						default:
+							var cmdwnd = document.getElementById("commandwindow");
+							var cmdwndcontainer = document.getElementById("commandwindowcontainer");
+							socket.emit("CommandLineSend", {"CommandLineRaw":cmdline.value})
+							var HTMLText = cmdline.value
+							HTMLText = HTMLText.replace(/\r?\n/g, '<br />');
+							cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
+							console.log(cmdline.value + "<-- this is the current innerHTML")
 
-					socket.emit("CommandLineSend", {"CommandLineRaw":cmdline.value})
-					var HTMLText = cmdline.value
-					HTMLText = HTMLText.replace(/\r?\n/g, '<br />');
-					cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
-					console.log(cmdline.value + "<-- this is the current innerHTML")
-					cmdline.value = ""
+							var scrollHeight = Math.max(cmdwndcontainer.scrollHeight, cmdwndcontainer.clientHeight);
+							cmdwndcontainer.scrollTop = scrollHeight - cmdwndcontainer.clientHeight;
+							cmdline.value = ""
+							break
+					}
 				}
 			}
 			break
 		}
 
 	})
+
+})
+
+
+	socket.on("CommandLineRecv", function(data){
+		var cmdwnd = document.getElementById("commandwindow");
+		var HTMLText = data.CommandlineRaw
+		HTMLText = HTMLText.replace(/\r?\n/g, '<br />');
+		cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
+
+		var scrollHeight = Math.max(cmdwndcontainer.scrollHeight, cmdwndcontainer.clientHeight);
+		cmdwndcontainer.scrollTop = scrollHeight - cmdwndcontainer.clientHeight;
+	})
+
+	socket.on("DirectoryStructure", function(data){
+		console.log(data.DirectoryStructure)
+	})
+
 	/*
 	var user = prompt("Enter your name, or don't")
 	while(1)
@@ -99,7 +141,6 @@ $(document).ready(function(){
 		}
 	}
 	*/
-})
 function ResizeWindow()
 {
 	var cmdwnd = document.getElementById("commandwindow");
@@ -113,9 +154,15 @@ function ResizeWindow()
 	var cmdline = document.getElementById("commandline");
 	cmdline.style.width = $(window).width() - 100;
 
-	var container = document.getElementById("commandwindowcontainer");
-	container.style.width = $(window).width() - 100;
-	container.style.height = $(window).height() - 100;
+	var directorydiv = document.getElementById("currentdirectory");
+	directorydiv.style.width = $(window).width() - 100;
+
+	var cmdwndcontainer = document.getElementById("commandwindowcontainer");
+	cmdwndcontainer.style.width = $(window).width() - 100;
+	cmdwndcontainer.style.height = $(window).height() - 100;
+
+	var scrollHeight = Math.max(cmdwndcontainer.scrollHeight, cmdwndcontainer.clientHeight);
+	cmdwndcontainer.scrollTop = scrollHeight - cmdwndcontainer.clientHeight;
 }
 
 </script>
@@ -125,6 +172,7 @@ function ResizeWindow()
 <div id=commandwindowcontainer>
 <div id=commandwindow></div>
 </div>
+<div id=currentdirectory></div>
 <textarea id=commandline></textarea>
 
 </body>
