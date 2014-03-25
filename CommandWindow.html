@@ -22,7 +22,7 @@
 	height: 200px;
 	width: 600px;
 
-	background-color: red;
+	background-color: #4FC4AF;
 
 	display: table-cell;
     vertical-align: bottom;
@@ -34,7 +34,7 @@
 	left: 0px;
 	width: 600px;
 	height: 20px;
-	background-color: brown;
+	background-color: #F26161;
 }
 
 
@@ -43,7 +43,7 @@
     resize: none;
 	width: 600px;
 	height: 60px;
-	background-color: blue;
+	background-color: #95B4DB;
 	white-space: nowrap;
 	overflow: auto;
 }
@@ -56,7 +56,7 @@
 <script>
 
 $(document).ready(function(){
-	var RootReplaceKey = "c:\AANode\Pictures"
+	var RootReplaceKey = "C:\\AANode\\pictures"
 
 	var rooms = 9
 	//var CurrentDirectory = "root:\>"
@@ -66,11 +66,11 @@ $(document).ready(function(){
 	socket.emit("GetDirectoryStructure")
 
 	var commandwindowdirectorydiv = document.getElementById("currentdirectory");
-	commandwindowdirectorydiv.innerHTML = "c:\\"
+	commandwindowdirectorydiv.innerHTML = "root"
 
 	document.addEventListener("keydown", function(e)
 	{
-		//console.log(e.keyCode + "<-- this is the keycode")
+		console.log(e.keyCode + "<-- this is the keycode")
 		switch(e.keyCode)
 		{
 			case 13:
@@ -84,45 +84,59 @@ $(document).ready(function(){
 
 				var cmdline = document.getElementById("commandline");
 				if(cmdline.value != ""){
-
-					switch(cmdline.value){
+					var SwitchedCommandLineInput = cmdline.value.split(" ")
+					switch(SwitchedCommandLineInput[0]){
 						case "dir":
 							var cmdwnd = document.getElementById("commandwindow");
-							console.log(CurrentDirectory + "<- this is the current directory")
-							console.log(LocalDirectoryStructureObject + "<-- local dir structure reference object")
-							console.log(LocalDirectoryStructureObject[CurrentDirectory] + "<- this is the object again...")
-							console.log(LocalDirectoryStructureObject.CurrentDirectory + "<- this is the object again...")
 							var FilesAndDirsCurrentDirectory = LocalDirectoryStructureObject[CurrentDirectory]
 							console.log(FilesAndDirsCurrentDirectory + "<-- this is the directory files and dirts after selecting object")
 							console.log("Is this the split htat is faliing?")
 							SplitFilesDirs = FilesAndDirsCurrentDirectory.split(";")
+							console.log(SplitFilesDirs)
 
-							if(SplitFilesDirs[0] != "undefined"){
+							var HTMLText = ""
+							if(SplitFilesDirs[0].length > 1){
 								var DirText = ""
-								console.log("What is going on here? this is the 2nd one")
 								SplitDirs = SplitFilesDirs[0].split(",")
 								for(var i = 0; i<SplitDirs.length; ++i){
 									DirText = DirText + "Dir\>\t" + SplitDirs[i] + "<br/>"
 								}
+								HTMLText = HTMLText + DirText
 							}
 
-							if(SplitFilesDirs[1] != "undefined"){
+							if(SplitFilesDirs[1].length > 1){
 								var FileText = ""
-								console.log("What is going on here?")
 								SplitFiles = SplitFilesDirs[1].split(",")
 								for(var i = 0; i<SplitFiles.length; ++i){
 									FileText = FileText + "File\t" + SplitFiles[i] + "<br/>"
 								}
+								HTMLText = HTMLText + FileText
 							}
 
-							var HTMLText = FileText + DirText
 							//HTMLText = HTMLText.replace(/\r?\n/g, '<br/>');
 							cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
 
 							ScrollToEndOfChatBox()
 							break
-						case "ls":
-
+						case "cd":
+							var DirectoryKeysArray = Object.keys(LocalDirectoryStructureObject)
+							for(var i=0; i<DirectoryKeysArray.length; ++i){
+								if(DirectoryKeysArray[i].toLowerCase() == (CurrentDirectory + "\\" + SwitchedCommandLineInput[1]).toLowerCase()){
+									CurrentDirectory = DirectoryKeysArray[i]
+									commandwindowdirectorydiv.innerHTML = CurrentDirectory.replace(RootReplaceKey, "root")
+									break;
+								}
+							}
+							console.log(CurrentDirectory + "<-- this is current directory")
+							break
+						case "cd..":
+							var CurrentDirectoryArray = CurrentDirectory.split("\\")
+							CurrentDirectory = CurrentDirectory.replace("\\" + CurrentDirectoryArray[CurrentDirectoryArray.length -1], "")
+							commandwindowdirectorydiv.innerHTML = CurrentDirectory.replace(RootReplaceKey, "root")
+							break
+						case "cd\\":
+							CurrentDirectory = RootReplaceKey
+							commandwindowdirectorydiv.innerHTML = CurrentDirectory.replace(RootReplaceKey, "root")
 							break
 						default:
 							var cmdwnd = document.getElementById("commandwindow");
@@ -132,14 +146,16 @@ $(document).ready(function(){
 							HTMLText = HTMLText.replace(/\r?\n/g, '<br />');
 							cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
 							console.log(cmdline.value + "<-- this is the current innerHTML")
-
 							ScrollToEndOfChatBox()
-							cmdline.value = ""
 							break
 					}
 				}
+				cmdline.value = ""
 			}
 			break
+			case 9:
+			break
+
 		}
 
 	})
