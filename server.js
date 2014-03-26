@@ -82,7 +82,7 @@ function start(route, handle)
 	var server = http.createServer(onRequest);
 	sio = io.listen(server)
 	sio.set("log level", 1)
-	server.listen("80")
+	server.listen("8080", "127.0.0.1")
 
 
 	sio.sockets.on('connection', function(socket){
@@ -364,12 +364,13 @@ function PopulateDirectoryStructure(BaseDirectories){
 
 	Directories = BaseDirectories.split(",")
 	console.log(BaseDirectories)
-	console.log(Directories)
+	//console.log(Directories)
+
+	DirectoryPassString = ""
 	for(var i = 0; i < Directories.length; ++i)
 	{
 		FilesString = ""
 		DirectoryString = ""
-		DirectoryPassString = ""
 
 		DirectoryReturnArray = fs.readdirSync(Directories[i])
 		console.log(DirectoryReturnArray)
@@ -390,17 +391,21 @@ function PopulateDirectoryStructure(BaseDirectories){
 
 		FilesString = FilesString.substring(0, (FilesString.length - 1))
 		DirectoryString = DirectoryString.substring(0, (DirectoryString.length - 1))
-		DirectoryPassString = DirectoryPassString.substring(0, (DirectoryPassString.length - 1))
 
+
+		/*
 		console.log("--------")
 		console.log(FilesString)
 		console.log(DirectoryString)
 		console.log(DirectoryPassString)
 		console.log("++++++++")
-
+		*/
 		DirectoryStructureObject[Directories[i]] = DirectoryString + ";" + FilesString
 	}
-	console.log(DirectoryStructureObject)
+
+	DirectoryPassString = DirectoryPassString.substring(0, (DirectoryPassString.length - 1))
+	console.log("-&&&&&&&&&&&&&&-")
+	console.log(DirectoryPassString)
 	console.log("ENDING ITERATION-----------------")
 	if(DirectoryPassString.length > 0){
 		PopulateDirectoryStructure(DirectoryPassString)

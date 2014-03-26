@@ -130,9 +130,11 @@ $(document).ready(function(){
 							console.log(CurrentDirectory + "<-- this is current directory")
 							break
 						case "cd..":
-							var CurrentDirectoryArray = CurrentDirectory.split("\\")
-							CurrentDirectory = CurrentDirectory.replace("\\" + CurrentDirectoryArray[CurrentDirectoryArray.length -1], "")
-							commandwindowdirectorydiv.innerHTML = CurrentDirectory.replace(RootReplaceKey, "root")
+							if(commandwindowdirectorydiv.innerHTML != "root"){
+								var CurrentDirectoryArray = CurrentDirectory.split("\\")
+								CurrentDirectory = CurrentDirectory.replace("\\" + CurrentDirectoryArray[CurrentDirectoryArray.length -1], "")
+								commandwindowdirectorydiv.innerHTML = CurrentDirectory.replace(RootReplaceKey, "root")
+							}
 							break
 						case "cd\\":
 							CurrentDirectory = RootReplaceKey
@@ -154,8 +156,47 @@ $(document).ready(function(){
 			}
 			break
 			case 9:
-			break
+				e.preventDefault()
+				if(e.shiftKey){
+				console.log("This is shift enter, it will go to the next line instead of submitting the shit")
+				}else{
+				var cmdline = document.getElementById("commandline");
+				if(cmdline.value != ""){
+					var SwitchedCommandLineInput = cmdline.value.split(" ")
+					if(SwitchedCommandLineInput[0] == "cd"){
+						SplitDirectorySlashes = SwitchedCommandLineInput[1].split("\\")
+						var DirectoryKeysArray = Object.keys(LocalDirectoryStructureObject)
+						for(var i=0; i<DirectoryKeysArray.length; ++i){
+							if(SplitDirectorySlashes.length == 1){
+								if((DirectoryKeysArray[i].toLowerCase()).indexOf(CurrentDirectory.toLowerCase()) != -1 && DirectoryKeysArray[i].toLowerCase() > (CurrentDirectory + "\\" + SwitchedCommandLineInput[1]).toLowerCase()){
+								var cmdwnd = document.getElementById("commandwindow");
+									//CurrentDirectory = DirectoryKeysArray[i]
+									cmdline.value = "cd "+ DirectoryKeysArray[i].replace(CurrentDirectory + "\\", "")
+									break;
+								}
+							}else{
+								var LastDirectoryCompare = SplitDirectorySlashes[SplitDirectorySlashes.length-1]
+								var QualifiedDirectoryStructure = SplitDirectorySlashes.slice(0, SplitDirectorySlashes.length-1)
+								console.log(LastDirectoryCompare + "<- last directory compare")
+								console.log(QualifiedDirectoryStructure + "<- split on slashes")
+								var BaseDirectoryValue = QualifiedDirectoryStructure.toString()
+								BaseDirectoryValue = BaseDirectoryValue.replace(",", "\\")
+								if((DirectoryKeysArray[i].toLowerCase()).indexOf(BaseDirectoryValue.toLowerCase()) != -1 && DirectoryKeysArray[i].toLowerCase() > (CurrentDirectory + "\\" + SwitchedCommandLineInput[1]).toLowerCase()){
+									cmdline.value = "cd "+ DirectoryKeysArray[i].replace(CurrentDirectory + "\\", "")
+								}
 
+							}
+
+
+						}
+
+
+
+					}
+				}
+				LocalDirectoryStructureObject
+				break
+			}
 		}
 
 	})
