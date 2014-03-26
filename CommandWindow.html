@@ -70,7 +70,7 @@ $(document).ready(function(){
 
 	document.addEventListener("keydown", function(e)
 	{
-		console.log(e.keyCode + "<-- this is the keycode")
+		//console.log(e.keyCode + "<-- this is the keycode")
 		switch(e.keyCode)
 		{
 			case 13:
@@ -164,34 +164,38 @@ $(document).ready(function(){
 				if(cmdline.value != ""){
 					var SwitchedCommandLineInput = cmdline.value.split(" ")
 					if(SwitchedCommandLineInput[0] == "cd"){
-						SplitDirectorySlashes = SwitchedCommandLineInput[1].split("\\")
-						var DirectoryKeysArray = Object.keys(LocalDirectoryStructureObject)
-						for(var i=0; i<DirectoryKeysArray.length; ++i){
-							if(SplitDirectorySlashes.length == 1){
-								if((DirectoryKeysArray[i].toLowerCase()).indexOf(CurrentDirectory.toLowerCase()) != -1 && DirectoryKeysArray[i].toLowerCase() > (CurrentDirectory + "\\" + SwitchedCommandLineInput[1]).toLowerCase()){
-								var cmdwnd = document.getElementById("commandwindow");
-									//CurrentDirectory = DirectoryKeysArray[i]
-									cmdline.value = "cd "+ DirectoryKeysArray[i].replace(CurrentDirectory + "\\", "")
-									break;
-								}
-							}else{
-								var LastDirectoryCompare = SplitDirectorySlashes[SplitDirectorySlashes.length-1]
-								var QualifiedDirectoryStructure = SplitDirectorySlashes.slice(0, SplitDirectorySlashes.length-1)
-								console.log(LastDirectoryCompare + "<- last directory compare")
-								console.log(QualifiedDirectoryStructure + "<- split on slashes")
-								var BaseDirectoryValue = QualifiedDirectoryStructure.toString()
-								BaseDirectoryValue = BaseDirectoryValue.replace(",", "\\")
-								if((DirectoryKeysArray[i].toLowerCase()).indexOf(BaseDirectoryValue.toLowerCase()) != -1 && DirectoryKeysArray[i].toLowerCase() > (CurrentDirectory + "\\" + SwitchedCommandLineInput[1]).toLowerCase()){
-									cmdline.value = "cd "+ DirectoryKeysArray[i].replace(CurrentDirectory + "\\", "")
-								}
+						var FirstSearchFirstDirectoryFlag = 0
+						var SubsequentSearchFirstDirectoryFlag = 0
+						var FirstSearchSubsequentDirectoryFlag = 0
+						var SubsequentSearchSubsequentDirectoryFlag = 0
 
-							}
-
-
+						var BlankDirectoryFlag = 0
+						var LookupString = ""
+						if(SwitchedCommandLineInput[1].lastIndexOf("\\") == -1 && SwitchedCommandLineInput[1].length == 0){
+							FirstSearchFirstDirectoryFlag = 1
 						}
 
+						if(SwitchedCommandLineInput[1].lastIndexOf("\\") == -1 && SwitchedCommandLineInput[1].length != 0){
+							SubsequentSearchFirstDirectoryFlag = 1
+							LookupString = SwitchedCommandLineInput[1]
+						}
 
+						if(SwitchedCommandLineInput[1].lastIndexOf("\\") 1= -1 && SwitchedCommandLineInput[1].length == 0){
+							FirstSearchSubsequentDirectoryFlag = 1
+						}
 
+						if(SwitchedCommandLineInput[1].lastIndexOf("\\") 1= -1 && SwitchedCommandLineInput[1].length 1= 0){
+							SubsequentSearchSubsequentDirectoryFlag = 1
+							LookupString = SwitchedCommandLineInput[1].substring(SwitchedCommandLineInput[1].lastIndexOf("\\"), SwitchedCommandLineInput[1].length
+						}
+
+						for(var i=0; i<DirectoryKeysArray.length; ++i){
+							if
+								var cmdwnd = document.getElementById("commandwindow");
+								cmdline.value = "cd "+ DirectoryKeysArray[i].replace(CurrentDirectory + "\\", "")
+								break;
+							}
+						}
 					}
 				}
 				LocalDirectoryStructureObject
