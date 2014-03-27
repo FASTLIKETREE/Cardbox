@@ -65,6 +65,7 @@ $(document).ready(function(){
 	socket.emit("CommandWindowCreated")
 	socket.emit("GetDirectoryStructure")
 
+	cmdwnd = document.getElementById("commandwindow");
 	var commandwindowdirectorydiv = document.getElementById("currentdirectory");
 	commandwindowdirectorydiv.innerHTML = "root"
 
@@ -87,7 +88,7 @@ $(document).ready(function(){
 					var SwitchedCommandLineInput = cmdline.value.split(" ")
 					switch(SwitchedCommandLineInput[0]){
 						case "dir":
-							var cmdwnd = document.getElementById("commandwindow");
+							""
 							var FilesAndDirsCurrentDirectory = LocalDirectoryStructureObject[CurrentDirectory]
 							console.log(FilesAndDirsCurrentDirectory + "<-- this is the directory files and dirts after selecting object")
 							console.log("Is this the split htat is faliing?")
@@ -118,7 +119,7 @@ $(document).ready(function(){
 
 							ScrollToEndOfChatBox()
 							break
-						case "cd":
+						case "cd ":
 							var DirectoryKeysArray = Object.keys(LocalDirectoryStructureObject)
 							for(var i=0; i<DirectoryKeysArray.length; ++i){
 								if(DirectoryKeysArray[i].toLowerCase() == (CurrentDirectory + "\\" + SwitchedCommandLineInput[1]).toLowerCase()){
@@ -141,7 +142,7 @@ $(document).ready(function(){
 							commandwindowdirectorydiv.innerHTML = CurrentDirectory.replace(RootReplaceKey, "root")
 							break
 						default:
-							var cmdwnd = document.getElementById("commandwindow");
+							""
 
 							socket.emit("CommandLineSend", {"CommandLineRaw":cmdline.value})
 							var HTMLText = cmdline.value
@@ -162,43 +163,75 @@ $(document).ready(function(){
 				}else{
 				var cmdline = document.getElementById("commandline");
 				if(cmdline.value != ""){
-					var SwitchedCommandLineInput = cmdline.value.split(" ")
+					console.log("What is going on here?")
+					var SwitchedCommandLineInput = (cmdline.value).split(" ")
+					console.log(SwitchedCommandLineInput[0] + "<-- this is switched command input for 0")
+					console.log(SwitchedCommandLineInput[1] + "<-- this is switched command input for 1")
+					console.log(SwitchedCommandLineInput + "<-- this is switched command input")
 					if(SwitchedCommandLineInput[0] == "cd"){
-						var FirstSearchFirstDirectoryFlag = 0
-						var SubsequentSearchFirstDirectoryFlag = 0
-						var FirstSearchSubsequentDirectoryFlag = 0
-						var SubsequentSearchSubsequentDirectoryFlag = 0
 
-						var BlankDirectoryFlag = 0
-						var LookupString = ""
+						DirectoryString = ""
+						SearchString = ""
+
 						if(SwitchedCommandLineInput[1].lastIndexOf("\\") == -1 && SwitchedCommandLineInput[1].length == 0){
-							FirstSearchFirstDirectoryFlag = 1
+							DirectoryString = CurrentDirectory
+							SearchString = ""
 						}
 
 						if(SwitchedCommandLineInput[1].lastIndexOf("\\") == -1 && SwitchedCommandLineInput[1].length != 0){
-							SubsequentSearchFirstDirectoryFlag = 1
-							LookupString = SwitchedCommandLineInput[1]
+							DirectoryString = CurrentDirectory
+							SearchString = SwitchedCommandLineInput[1]
 						}
 
-						if(SwitchedCommandLineInput[1].lastIndexOf("\\") 1= -1 && SwitchedCommandLineInput[1].length == 0){
-							FirstSearchSubsequentDirectoryFlag = 1
+						if(SwitchedCommandLineInput[1].lastIndexOf("\\") != -1 && SwitchedCommandLineInput[1].length == (SwitchedCommandLineInput[1].lastIndexOf("\\")+1)){
+							console.log(SwitchedCommandLineInput[1].length + "<-- length! THIS IS THE EQUAL CASE MOFO!")
+							console.log(SwitchedCommandLineInput[1].lastIndexOf("\\") + "<-- Last index of slashes!!")
+							DirectoryString = CurrentDirectory + "\\" + SwitchedCommandLineInput[1].substring(0, SwitchedCommandLineInput[1].lastIndexOf("\\"))
+							SearchString = ""
 						}
 
-						if(SwitchedCommandLineInput[1].lastIndexOf("\\") 1= -1 && SwitchedCommandLineInput[1].length 1= 0){
-							SubsequentSearchSubsequentDirectoryFlag = 1
-							LookupString = SwitchedCommandLineInput[1].substring(SwitchedCommandLineInput[1].lastIndexOf("\\"), SwitchedCommandLineInput[1].length
+						if(SwitchedCommandLineInput[1].lastIndexOf("\\") != -1 && SwitchedCommandLineInput[1].length != (SwitchedCommandLineInput[1].lastIndexOf("\\")+1)){
+							console.log(SwitchedCommandLineInput[1].length + "<-- length!")
+							console.log(SwitchedCommandLineInput[1].lastIndexOf("\\") + "<-- Last index of slashes!!")
+							DirectoryString = CurrentDirectory + "\\" + SwitchedCommandLineInput[1].substring(0, SwitchedCommandLineInput[1].lastIndexOf("\\"))
+							SearchString = SwitchedCommandLineInput[1].substring(SwitchedCommandLineInput[1].lastIndexOf("\\")+1, SwitchedCommandLineInput[1].length)
 						}
-
+						console.log(DirectoryString + "<-- this is the directory string")
+						console.log(SearchString + "<-- this is the search string")
+						if(DirectoryString in LocalDirectoryStructureObject){
+							console.log("We have found directory string in local object right?")
+							//if(SearchString = ""){
+								LocalFilesAndDirs = LocalDirectoryStructureObject[DirectoryString].split(";")
+								if(LocalFilesAndDirs[0].length != 0){
+									console.log("Local fiels and dirs is not zero or something")
+									LocalFolderSplit = LocalFilesAndDirs[0].split(",")
+									var WrapFlag = 1
+									for(var i = 0; i < LocalFolderSplit.length; ++i){
+										console.log("Hitting the inner I loop with i=" + i)
+										if(LocalFolderSplit[i].toLowerCase() > SearchString.toLowerCase()){
+											cmdline.value = "cd "+ (DirectoryString + "\\" + LocalFolderSplit[i]).replace(RootReplaceKey + "\\", "")
+											WrapFlag = 0
+											break
+										}
+									}
+									if(WrapFlag == 1){
+										cmdline.value = "cd "+ (DirectoryString + "\\" + LocalFolderSplit[0]).replace(RootReplaceKey + "\\", "")
+									}
+								}
+								console.log(LocalFilesAndDirs)
+							//}
+						}else{
+							console.log("This is the else case")
+						}
+						/*
 						for(var i=0; i<DirectoryKeysArray.length; ++i){
-							if
-								var cmdwnd = document.getElementById("commandwindow");
-								cmdline.value = "cd "+ DirectoryKeysArray[i].replace(CurrentDirectory + "\\", "")
-								break;
-							}
+							""
+							cmdline.value = "cd "+ DirectoryKeysArray[i].replace(CurrentDirectory + "\\", "")
+							break;
 						}
+						*/
 					}
 				}
-				LocalDirectoryStructureObject
 				break
 			}
 		}
@@ -208,7 +241,7 @@ $(document).ready(function(){
 
 
 	socket.on("CommandLineRecv", function(data){
-		var cmdwnd = document.getElementById("commandwindow");
+		""
 		var HTMLText = data.CommandlineRaw
 		HTMLText = HTMLText.replace(/\r?\n/g, '<br />');
 		cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
@@ -220,7 +253,7 @@ $(document).ready(function(){
 		LocalDirectoryStructureObject = data.DirectoryStructure
 		//jQuery.extend(LocalDirectoryStructureObject, data.DirectoryStructure)
 		//LocalDirectoryStructureObject = data.DirectoryStructure
-		console.log(data.DirectoryStructure)
+		//console.log(data.DirectoryStructure)
 		console.log(LocalDirectoryStructureObject)
 	})
 
@@ -253,7 +286,7 @@ function ScrollToEndOfChatBox(){
 
 function ResizeWindow()
 {
-	var cmdwnd = document.getElementById("commandwindow");
+	""
 	//alert("This has resized")
 	console.log("The fuck is going on here?");
 	console.log($(window).height() + "<-- this is the window height");
