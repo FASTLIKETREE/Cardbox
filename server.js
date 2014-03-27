@@ -82,7 +82,7 @@ function start(route, handle)
 	var server = http.createServer(onRequest);
 	sio = io.listen(server)
 	sio.set("log level", 1)
-	server.listen("8080", "127.0.0.1")
+	server.listen("80")
 
 
 	sio.sockets.on('connection', function(socket){
@@ -163,8 +163,7 @@ function start(route, handle)
 		console.log("----------------")
 		console.log(data)
 		console.log("++++++++++++++++")
-		var CDObject = MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject]
-		console.log(CDObject + "<-- this is the CDObject")
+
 
 		var ObjectID = null
 		if(IDReaperArray.length > 0){
@@ -178,15 +177,23 @@ function start(route, handle)
 		switch(data.type){
 			case "newdeck":
 				console.log("THIS IS IN THE NEWDECK THING?")
-				fs.readdir("C:\\AANode\\pictures\\" + data.deck, function(err, cards){
-					cards = shuffle(cards)
+				console.log(data.deck)
+				//fs.readdir("C:\\AANode\\pictures\\" + data.deck, function(err, cards){
+				fs.readdir(data.deck, function(err, cards){
+					var CardsNoDirectories = []
+					var ReplacePathFowardSlash = (data.deck).replace(/\\/g, "/")
+					ReplacePathFowardSlash  = ReplacePathFowardSlash.replace("C:/AANode", "")
 					for(var i = 0; i < cards.length; ++i)
 					{
-						cards[i] = "/pictures/" + data.deck + "/" + cards[i]
+						if(cards[i].indexOf(".jpg") == cards[i].length - 4 || cards[i].indexOf(".png") == cards[i].length - 4 || cards[i].indexOf(".bmp") == cards[i].length - 4){
+							CardsNoDirectories.push(ReplacePathFowardSlash + "/" + cards[i])
+							//cards[i] = ReplacePathFowardSlash + "/" + cards[i]
+						}
 					}
+					cards = shuffle(cards)
 
 					MasterCardAndDeckStateObject[ObjectID] = new DeckOrCardObject()
-					MasterCardAndDeckStateObject[ObjectID].cardarray = cards
+					MasterCardAndDeckStateObject[ObjectID].cardarray = CardsNoDirectories
 					MasterCardAndDeckStateObject[ObjectID].deck = 1
 					MasterCardAndDeckStateObject[ObjectID].x = "0px"
 					MasterCardAndDeckStateObject[ObjectID].y = "200px"
@@ -197,6 +204,8 @@ function start(route, handle)
 				})
 				break
 			case "drawboard":
+				var CDObject = MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject]
+				console.log(CDObject + "<-- this is the CDObject")
 				console.log(CDObject + "<-- this is the CDObject")
 				if(CDObject.cardarray.length > 0){
 					MasterCardAndDeckStateObject[ObjectID] = new DeckOrCardObject()
@@ -210,6 +219,8 @@ function start(route, handle)
 				}
 				break
 			case "drawhand":
+				var CDObject = MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject]
+				console.log(CDObject + "<-- this is the CDObject")
 				if(CDObject.cardarray.length > 0){
 					MasterCardAndDeckStateObject[ObjectID] = new DeckOrCardObject()
 					MasterCardAndDeckStateObject[ObjectID].deck = 0
