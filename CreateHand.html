@@ -97,6 +97,12 @@ function cardobject(){
 		ActiveObject.rendercard(data.ObjectSrc, data.x, data.y)
 	})
 
+	socket.on("DeleteObject", function(data){
+		console.log(data.ObjectID)
+		console.log(data)
+		CardsObject[data.ObjectID].delete()
+	})
+
 /*
 	socket.on("GrabCardToHand", function(data){
 		CardsObject[data.CardID] = new cardobject()

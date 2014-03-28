@@ -140,8 +140,30 @@ $(document).ready(function(){
 							CurrentDirectory = RootReplaceKey
 							commandwindowdirectorydiv.innerHTML = CurrentDirectory.replace(RootReplaceKey, "root")
 							break
-						case "\/newdeck":
+						case "\/new":
+						case "\/deck":
 							socket.emit("CreateObject", {'deck':CurrentDirectory, "type":"newdeck"})
+							break
+						case "\/view":
+								var NewWindow = window.open("", "ViewDirectory", "height=200,width=200")
+								NewWindow.document.write("<html><head><title></title></head><body></body>");
+								var CardsAndDeckArray = (LocalDirectoryStructureObject[CurrentDirectory]).split(";")
+								if(CardsAndDeckArray[1].length > 0){
+									var CardsOnly = CardsAndDeckArray[1]
+									var CardsOnlySplit = CardsOnly.split(",")
+									var ReplacePathFowardSlash = CurrentDirectory.replace(/\\/g, "/")
+									ReplacePathFowardSlash  = ReplacePathFowardSlash.replace("C:/AANode/", "")
+									for(var k = 1; k < CardsOnlySplit.length; ++k)
+									{
+										var image = new Image();
+										console.log(ReplacePathFowardSlash + "/" + CardsOnlySplit[k] + "<-- this is the image source")
+										image.src = ReplacePathFowardSlash + "/" + CardsOnlySplit[k];
+										NewWindow.document.body.appendChild(image)
+									}
+								}
+							break
+						case "\/clear":
+							socket.emit("Clear")
 							break
 						default:
 							""

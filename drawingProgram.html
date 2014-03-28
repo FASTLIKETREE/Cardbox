@@ -116,7 +116,9 @@ function DCobject(){
 		delete DecksAndCards[this.id]
 		imageobject.parentNode.removeChild(imageobject)
 		ActiveObject = 0
+		console.log("Does this get here and remove the shit?")
 		if(this.isdeck == 1){
+		console.log("Does this get here and remove the shit? in the isdeck thing?")
 			socket.emit("DeleteDeck", {"DeckID":this.id})
 			BoundDeckObject = 0
 		}
@@ -262,6 +264,7 @@ $(document).ready(function(){
 		console.log(data)
 	})
 
+	/*
 	socket.on("CreateStandardGameElements")
 
 	socket.on('DecksDir', function(data){
@@ -331,6 +334,7 @@ $(document).ready(function(){
 	})
 
 	socket.emit("PopulateDecks")
+	*/
 })
 
 /***********************************************
@@ -344,8 +348,6 @@ $(document).ready(function(){
 </head>
 <body class="advanced">
 
-<div id=CounterX> some serious x </div>
-<div id=CounterY> some serious x </div>
 </form>
 <script>
 

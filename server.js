@@ -82,7 +82,7 @@ function start(route, handle)
 	var server = http.createServer(onRequest);
 	sio = io.listen(server)
 	sio.set("log level", 1)
-	server.listen("80")
+	server.listen("8080", "127.0.0.1")
 
 
 	sio.sockets.on('connection', function(socket){
@@ -165,20 +165,21 @@ function start(route, handle)
 		console.log("++++++++++++++++")
 
 
-		var ObjectID = null
-		if(IDReaperArray.length > 0){
-			console.log(IDReaperArray + "<-- thisi s the id reaper array")
-			ObjectID = IDReaperArray.splice(0,1)}
-		else{
-			ObjectID = UniqueIDCounter
-			UniqueIDCounter = UniqueIDCounter + 1
-		}
-
 		switch(data.type){
 			case "newdeck":
 				console.log("THIS IS IN THE NEWDECK THING?")
 				console.log(data.deck)
 				//fs.readdir("C:\\AANode\\pictures\\" + data.deck, function(err, cards){
+
+				var ObjectID = null
+				if(IDReaperArray.length > 0){
+					console.log(IDReaperArray + "<-- thisi s the id reaper array")
+					ObjectID = IDReaperArray.splice(0,1)}
+				else{
+					ObjectID = UniqueIDCounter
+					UniqueIDCounter = UniqueIDCounter + 1
+				}
+
 				fs.readdir(data.deck, function(err, cards){
 					var CardsNoDirectories = []
 					var ReplacePathFowardSlash = (data.deck).replace(/\\/g, "/")
@@ -208,6 +209,15 @@ function start(route, handle)
 				console.log(CDObject + "<-- this is the CDObject")
 				console.log(CDObject + "<-- this is the CDObject")
 				if(CDObject.cardarray.length > 0){
+
+					var ObjectID = null
+					if(IDReaperArray.length > 0){
+						console.log(IDReaperArray + "<-- thisi s the id reaper array")
+						ObjectID = IDReaperArray.splice(0,1)}
+					else{
+						ObjectID = UniqueIDCounter
+						UniqueIDCounter = UniqueIDCounter + 1
+					}
 					MasterCardAndDeckStateObject[ObjectID] = new DeckOrCardObject()
 					MasterCardAndDeckStateObject[ObjectID].deck = 0
 					MasterCardAndDeckStateObject[ObjectID].x = (Number((CDObject.x).replace("px", "")) + 360) + "px"
@@ -222,6 +232,15 @@ function start(route, handle)
 				var CDObject = MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject]
 				console.log(CDObject + "<-- this is the CDObject")
 				if(CDObject.cardarray.length > 0){
+
+					var ObjectID = null
+					if(IDReaperArray.length > 0){
+						console.log(IDReaperArray + "<-- thisi s the id reaper array")
+						ObjectID = IDReaperArray.splice(0,1)}
+					else{
+						ObjectID = UniqueIDCounter
+						UniqueIDCounter = UniqueIDCounter + 1
+					}
 					MasterCardAndDeckStateObject[ObjectID] = new DeckOrCardObject()
 					MasterCardAndDeckStateObject[ObjectID].deck = 0
 					MasterCardAndDeckStateObject[ObjectID].x = "0px"
@@ -256,8 +275,10 @@ function start(route, handle)
 
 	socket.on("PositionCardHand", function(data){
 		console.log(MasterCardAndDeckStateObject)
-		MasterCardAndDeckStateObject[data.DeckID].x = data.x
-		MasterCardAndDeckStateObject[data.DeckID].y = data.y
+		if(MasterCardAndDeckStateObject[data.DeckID] != "undefined"){
+			MasterCardAndDeckStateObject[data.DeckID].x = data.x
+			MasterCardAndDeckStateObject[data.DeckID].y = data.y
+		}
 		//socket.broadcast.emit("PositionDeck", {"DeckID":data.DeckID, "x": data.x, "y": data.y})
 	})
 
@@ -309,6 +330,21 @@ function start(route, handle)
 		console.log(MasterCardAndDeckStateObject)
 	})
 
+	socket.on("Clear", function(){
+		console.log("This has hit the clear functionality!")
+		for(key in MasterCardAndDeckStateObject){
+			console.log("is something wrong with the foreach loop?")
+			IDReaperArray.push(key)
+			if(MasterCardAndDeckStateObject[key].owner == null){
+				socket.broadcast.to("mainwindows").emit("DeleteObject", {"ObjectID":key})
+			}else{
+				socket.broadcast.to("handwindows").emit("DeleteObject", {"ObjectID":key})
+			}
+			delete MasterCardAndDeckStateObject[key]
+		}
+		console.log(MasterCardAndDeckStateObject + "<-- this is master object after clear")
+	})
+
 	socket.on("CommandLineSend", function(data){
 		console.log(data.CommandLineRaw + "<-- this is the command line")
 		//console.log(io.sockets.manager.rooms)
@@ -320,6 +356,7 @@ function start(route, handle)
 	socket.on("GetDirectoryStructure", function(){
 		socket.emit("DirectoryStructure", {"DirectoryStructure": DirectoryStructureObject})
 	})
+	/*
 	//This is called when the client starts, it looks through the deck folder and gathers up all the directory names and card names, this info is passed to the client which then
 	//creates a button that can be used to view the decks of cards
 	socket.on("PopulateDecks", function(){
@@ -365,7 +402,7 @@ function start(route, handle)
 	})
 
 })
-
+*/
 	console.log("Server has started.");
 }
 
