@@ -124,6 +124,16 @@ function DCobject(){
 		}
 	}
 
+	this.flipup = function()
+	{
+		imageobject.src = this.imgsrc
+	}
+
+	this.flipdown = function()
+	{
+		imageobject.src = "pictures/AnotherGroupOfCards/Deck.png"
+	}
+
 	this.shuffle = function()
 	{
 		socket.emit("ShuffleDeck", {"DeckID":this.id})
@@ -185,6 +195,12 @@ $(document).ready(function(){
 					socket.emit("CreateObject", {"type":"drawboard"})
 				}
 				break
+			case 70: //Keycode 70 = F (Flip a card over)
+				if(ActiveObject.isdeck == 0){
+					console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
+					socket.emit("FlipCard", {"ObjectID":ActiveObject.id})
+				}
+				break
 			case 71: //Keycode 71 = G (Grab the active card object and put it into your hand)
 				if(ActiveObject != 0 && ActiveObject.isdeck == 0){
 					console.log(ActiveObject.imgsrc + "<-- This card has been grabbed")
@@ -243,6 +259,18 @@ $(document).ready(function(){
 		console.log(data.y)
 		DecksAndCards[data.DeckID].setposition(data.x, data.y)
 	})
+
+	socket.on("FlipCardUp", function(data){
+		console.log("Hitting flip card up!!")
+		DecksAndCards[data.ObjectID].flipup()
+		//data.ObjectID
+	})
+
+	socket.on("FlipCardDown", function(data){
+		console.log("Hitting the flipd own")
+		DecksAndCards[data.ObjectID].flipdown()
+	})
+
 
 	socket.on("ToBoard", function(data){
 		console.log(data.CardID + "<-- this is the to board data...")

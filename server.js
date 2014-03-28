@@ -290,6 +290,26 @@ function start(route, handle)
 		console.log(MasterCardAndDeckStateObject)
 	})
 
+	socket.on("FlipCard", function(data){
+		console.log("Flip card called")
+		console.log(MasterCardAndDeckStateObject[data.ObjectID].facedown + "<--this fuck is this face down flag?!? called")
+		if(MasterCardAndDeckStateObject[data.ObjectID].facedown == 1){
+			console.log("Flip card up!")
+			sio.sockets.in("mainwindows").emit("FlipCardUp", {"ObjectID":data.ObjectID})
+			MasterCardAndDeckStateObject[data.ObjectID].facedown = 0
+			return
+		}
+
+		if(MasterCardAndDeckStateObject[data.ObjectID].facedown == 0 || MasterCardAndDeckStateObject[data.ObjectID].facedown == null){
+			console.log("Flip card down!")
+			sio.sockets.in("mainwindows").emit("FlipCardDown", {"ObjectID":data.ObjectID})
+			MasterCardAndDeckStateObject[data.ObjectID].facedown = 1
+			return
+		}
+	})
+
+
+
 	socket.on("AddToDeck", function(data){
 		console.log(MasterCardAndDeckStateObject)
 		console.log("\n")
@@ -400,9 +420,9 @@ function start(route, handle)
 
 		})
 	})
-
-})
 */
+})
+
 	console.log("Server has started.");
 }
 
