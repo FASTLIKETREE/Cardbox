@@ -34,6 +34,7 @@ function DeckOrCardObject()
 	this.deck = null
 	this.owner = null
 	this.facedown = null
+	this.quantity = null
 	this.cardarray = new Array()
 }
 
@@ -204,6 +205,27 @@ function start(route, handle)
 					//GameWindowConnectionObject[address.address].emit("CreateObject", {"ObjectID":ObjectID, "ObjectSrc":data.deck, "x":"0px", "y":"200px", "type":"deck"})
 				})
 				break
+
+			case "newcard":
+					var ObjectID = null
+					if(IDReaperArray.length > 0){
+						console.log(IDReaperArray + "<-- thisi s the id reaper array")
+						ObjectID = IDReaperArray.splice(0,1)}
+					else{
+						ObjectID = UniqueIDCounter
+						UniqueIDCounter = UniqueIDCounter + 1
+					}
+
+					var ReplacePathFowardSlash = (data.src).replace(/\\/g, "/")
+					ReplacePathFowardSlash  = ReplacePathFowardSlash.replace("C:/AANode", "")
+					MasterCardAndDeckStateObject[ObjectID] = new DeckOrCardObject()
+					MasterCardAndDeckStateObject[ObjectID].deck = 0
+					MasterCardAndDeckStateObject[ObjectID].x = "0px"
+					MasterCardAndDeckStateObject[ObjectID].y = "0px"
+					console.log("This hit the new card case!")
+					sio.sockets.in("mainwindows").emit("CreateObject", {"ObjectSrc":ReplacePathFowardSlash, "ObjectID":ObjectID, "x":MasterCardAndDeckStateObject[ObjectID].x, "y":MasterCardAndDeckStateObject[ObjectID].y})
+
+				break
 			case "drawboard":
 				var CDObject = MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject]
 				console.log(CDObject + "<-- this is the CDObject")
@@ -266,10 +288,11 @@ function start(route, handle)
 	socket.on("PositionDeck", function(data){
 		if(typeof(MasterCardAndDeckStateObject[data.DeckID]) === "object" && MasterCardAndDeckStateObject[data.DeckID] != null)
 		{
+			console.log("WHat is going on in this position deck in server?!? this is the deck ID -->" + data.DeckID)
 			console.log(MasterCardAndDeckStateObject)
 			MasterCardAndDeckStateObject[data.DeckID].x = data.x
 			MasterCardAndDeckStateObject[data.DeckID].y = data.y
-			socket.broadcast.emit("PositionDeck", {"DeckID":data.DeckID, "x": data.x, "y": data.y})
+			sio.sockets.in("mainwindows").emit("PositionDeck", {"DeckID":data.DeckID, "x": data.x, "y": data.y})
 		}
 	})
 
@@ -280,6 +303,12 @@ function start(route, handle)
 			MasterCardAndDeckStateObject[data.DeckID].y = data.y
 		}
 		//socket.broadcast.emit("PositionDeck", {"DeckID":data.DeckID, "x": data.x, "y": data.y})
+	})
+
+	socket.on("UpdateCounterDiv", function(data){
+		console.log(data.ObjectID + "<-- this is the object ID")
+		console.log(data.Quantity + "<-- this is the update value")
+		sio.sockets.in("mainwindows").emit("UpdateCounterDiv", {"ObjectID":data.ObjectID, "Quantity":data.Quantity})
 	})
 
 	socket.on("ShuffleDeck", function(data){
@@ -307,7 +336,6 @@ function start(route, handle)
 			return
 		}
 	})
-
 
 
 	socket.on("AddToDeck", function(data){

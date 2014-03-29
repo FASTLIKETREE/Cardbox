@@ -25,6 +25,7 @@ function DCobject(){
 	this.isdeck = null
 	this.imgsrc = null
 
+	var counterdiv = null
 	var imageobject = new Image();
 
 	var mouseenter = {
@@ -94,22 +95,35 @@ function DCobject(){
 			//socket.emit("CreateDeck", {'deck':namestring})
 			document.body.appendChild(imageobject)
 		}
+
+			counterdiv = document.createElement("div");
+			counterdiv.style.position="absolute"
+			counterdiv.style.left = x
+			counterdiv.style.top = (Number(y.replace("px", "") - 15 )) + "px"
+			var CounterDivText = document.createTextNode("")
+			counterdiv.appendChild(CounterDivText)
+			document.body.appendChild(counterdiv);
 	}
 
 	this.setposition = function(posx, posy)
 	{
 		imageobject.style.left = posx
 		imageobject.style.top = posy
+		console.log(counterdiv.innerHTML + "<-- this is the inner html of the counter div thing when dragging!")
+		counterdiv.style.left = posx
+		counterdiv.style.top = (Number(posy.replace("px", "") - 15 )) + "px"
 	}
 
-/*
-	this.drawcard = function(CardName, CardID)
+	this.updatecounterdiv = function(Quantity)
 	{
-		ActiveObject = new DCObject()
-		//ActiveObject.
-		ActiveObject.render(CardName)
+		console.log(Quantity + "<- this is quantity!")
+		var CurrentValue = counterdiv.innerHTML
+		CurrentValue = Number(CurrentValue) + Number(Quantity)
+		if(CurrentValue == 0){
+			CurrentValue = ""
+		}
+		counterdiv.innerHTML = CurrentValue
 	}
-*/
 
 	this.delete = function()
 	{
@@ -154,14 +168,47 @@ $(document).ready(function(){
 
 	document.addEventListener("keydown", function(e)
 	{
+		console.log(e.keyCode +"<-- this is the keycode")
 		switch(e.keyCode)
 		{
+
 			case 8: //Keycode 8 = backspace key (Delete card (not deck))
 				e.preventDefault()
 				if(ActiveObject != 0 && ActiveObject.isdeck == 0){
 					socket.emit("DeleteObject", {"ObjectID":ActiveObject.id})
 				}
 				break
+			case 33: //Keycode 33 = Page up (Add 20)
+				if(ActiveObject != 0){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"20"})
+				}
+			break
+			case 34: //Keycode 34 = Page down (Subtract 20)
+				if(ActiveObject != 0){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-20"})
+				}
+			break
+			case 37: //Keycode 37 = Left Arrow (Subtract 5)
+				if(ActiveObject != 0){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-5"})
+				}
+			break
+			case 38: //Keycode 38 = Up Arrow (Add 1)
+				if(ActiveObject != 0){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"1"})
+				}
+			break
+			case 39: //Keycode 39 = Right Arrow (Add 5)
+				if(ActiveObject != 0){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"5"})
+				}
+			break
+			case 40: //Keycode 40 = Down Arrow (Subtract 1)
+				if(ActiveObject != 0){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-1"})
+				}
+			break
+
 			case 46: //Keycode 46 = Delete Key (Delete deck)
 				if(BoundDeckObject != 0){
 					socket.emit("DeleteObject", {"ObjectID":BoundDeckObject.id})
@@ -254,7 +301,8 @@ $(document).ready(function(){
 	})
 
 	socket.on("PositionDeck", function(data){
-		console.log(data.DeckID)
+
+		console.log(data.DeckID + "<-- WWHHHHHHHHHHHHHHATTTTTTTTTTTT???")
 		console.log(data.x)
 		console.log(data.y)
 		DecksAndCards[data.DeckID].setposition(data.x, data.y)
@@ -269,6 +317,11 @@ $(document).ready(function(){
 	socket.on("FlipCardDown", function(data){
 		console.log("Hitting the flipd own")
 		DecksAndCards[data.ObjectID].flipdown()
+	})
+
+	socket.on("UpdateCounterDiv", function(data){
+	console.log(data.Quantity + "<-- this is quantity...")
+		DecksAndCards[data.ObjectID].updatecounterdiv(data.Quantity)
 	})
 
 
@@ -420,6 +473,9 @@ console.log(this.x + "<-- this is the clientx")
 this.y=evtobj.clientY
 console.log(this.y + "<-- this is the clienty\n")
 
+FinalX = this.offsetx+evtobj.clientX-this.x+"px"
+FinalY = this.offsety+evtobj.clientY-this.y+"px"
+
 if (evtobj.preventDefault)
 evtobj.preventDefault()
 
@@ -431,6 +487,7 @@ var evtobj=window.event? window.event : e
 if (this.dragapproved==1){
 this.targetobj.style.left=this.offsetx+evtobj.clientX-this.x+"px"
 this.targetobj.style.top=this.offsety+evtobj.clientY-this.y+"px"
+
 this.countemit = this.countemit + 1
 FinalX = this.offsetx+evtobj.clientX-this.x+"px"
 FinalY = this.offsety+evtobj.clientY-this.y+"px"
@@ -440,6 +497,7 @@ if (this.countemit == 10)
 	console.log(ActiveObject.id + "<-- this is the longDesc, and should be the ID of the deck object")
 	this.countemit = 0
 	if(ActiveObject != 0){
+	console.log("Never get to here or what?")
 	socket.emit("PositionDeck", {"DeckID": ActiveObject.id, "x":this.offsetx+evtobj.clientX-this.x+"px", "y":this.targetobj.style.top=this.offsety+evtobj.clientY-this.y+"px"})}
 }
 

@@ -144,21 +144,45 @@ $(document).ready(function(){
 						case "\/deck":
 							socket.emit("CreateObject", {'deck':CurrentDirectory, "type":"newdeck"})
 							break
+						case "\/one":
+							socket.emit("CreateObject", {'src':CurrentDirectory + "\\" + cmdline.value.replace("/\one ", ""), "type":"newcard"})
+							break
 						case "\/view":
 								var NewWindow = window.open("", "ViewDirectory", "height=200,width=200")
 								NewWindow.document.write("<html><head><title></title></head><body></body>");
+
+								/*
+								imagedividerdiv = document.createElement("div");
+								var CounterDivText = document.createTextNode("")
+								counterdiv.appendChild(CounterDivText)
+								document.body.appendChild(counterdiv);
+								*/
+
 								var CardsAndDeckArray = (LocalDirectoryStructureObject[CurrentDirectory]).split(";")
 								if(CardsAndDeckArray[1].length > 0){
 									var CardsOnly = CardsAndDeckArray[1]
 									var CardsOnlySplit = CardsOnly.split(",")
 									var ReplacePathFowardSlash = CurrentDirectory.replace(/\\/g, "/")
 									ReplacePathFowardSlash  = ReplacePathFowardSlash.replace("C:/AANode/", "")
-									for(var k = 1; k < CardsOnlySplit.length; ++k)
-									{
+									for(var k = 1; k < CardsOnlySplit.length; ++k){
+										var containerdiv = document.createElement("div");
+										var namestringdiv = document.createElement("div");
+										var imageobjectdiv = document.createElement("div");
+										var ViewDivText = document.createTextNode(String.fromCharCode(13) + String.fromCharCode(13)+ String.fromCharCode(13) + CardsOnlySplit[k])
+										namestringdiv.appendChild(ViewDivText)
+										//imagedividerdiv.setAttribute("style", "width:500px,height:300px")
+
 										var image = new Image();
 										console.log(ReplacePathFowardSlash + "/" + CardsOnlySplit[k] + "<-- this is the image source")
 										image.src = ReplacePathFowardSlash + "/" + CardsOnlySplit[k];
-										NewWindow.document.body.appendChild(image)
+										imageobjectdiv.appendChild(image)
+										if(k != 1){
+											containerdiv.appendChild(document.createElement("br"));
+											containerdiv.appendChild(document.createElement("br"));
+										}
+										containerdiv.appendChild(namestringdiv)
+										containerdiv.appendChild(imageobjectdiv)
+										NewWindow.document.body.appendChild(containerdiv)
 									}
 								}
 							break
@@ -182,9 +206,9 @@ $(document).ready(function(){
 			break
 			case 9:
 				e.preventDefault()
-				if(e.shiftKey){
-				console.log("This is shift enter, it will go to the next line instead of submitting the shit")
-				}else{
+				//if(e.shiftKey){
+				//console.log("This is shift enter, it will go to the next line instead of submitting the shit")
+				//}else{
 				var cmdline = document.getElementById("commandline");
 				if(cmdline.value != ""){
 
@@ -192,7 +216,7 @@ $(document).ready(function(){
 					var SwitchedCommandLineInput = ""
 					var ReplaceWhiteSpace = (cmdline.value).toString()
 					ReplaceWhiteSpace = ReplaceWhiteSpace.replace(/^\s+|\s+$/g,'')
-					if((cmdline.value).length == 3 && ReplaceWhiteSpace.length == 2){
+					if((cmdline.value).length > ReplaceWhiteSpace.length && (ReplaceWhiteSpace.indexOf("cd") != -1 || ReplaceWhiteSpace.indexOf("\/one") != -1)){
 						SwitchedCommandLineInput  = ReplaceWhiteSpace.split(" ")
 						SwitchedCommandLineInput.push(" ")
 					}else{
@@ -204,7 +228,7 @@ $(document).ready(function(){
 					console.log(SwitchedCommandLineInput[1] + "<-- this is switched command input for 1")
 					console.log(SwitchedCommandLineInput + "<-- this is switched command input")
 
-					if(SwitchedCommandLineInput[0] == "cd"){
+					if(SwitchedCommandLineInput[0] == "cd" || SwitchedCommandLineInput[0] == "\/one"){
 
 						DirectoryString = ""
 						SearchString = ""
@@ -232,11 +256,12 @@ $(document).ready(function(){
 							DirectoryString = CurrentDirectory + "\\" + SwitchedCommandLineInput[1].substring(0, SwitchedCommandLineInput[1].lastIndexOf("\\"))
 							SearchString = SwitchedCommandLineInput[1].substring(SwitchedCommandLineInput[1].lastIndexOf("\\")+1, SwitchedCommandLineInput[1].length)
 						}
+
 						console.log(DirectoryString + "<-- this is the directory string")
 						console.log(SearchString + "<-- this is the search string")
 						if(DirectoryString in LocalDirectoryStructureObject){
 							console.log("We have found directory string in local object right?")
-							//if(SearchString = ""){
+							if(SwitchedCommandLineInput[0] == "cd"){
 								LocalFilesAndDirs = LocalDirectoryStructureObject[DirectoryString].split(";")
 								console.log(LocalDirectoryStructureObject[DirectoryString] + "<-- local directory string and shit?")
 								if(LocalFilesAndDirs[0].length != 0){
@@ -257,14 +282,35 @@ $(document).ready(function(){
 									}
 								}
 								console.log(LocalFilesAndDirs)
-							//}
-						}else{
-							console.log("This is the else case")
+							}
+							if(SwitchedCommandLineInput[0] == "\/one"){
+								LocalFilesAndDirs = LocalDirectoryStructureObject[DirectoryString].split(";")
+								console.log(LocalDirectoryStructureObject[DirectoryString] + "<-- local directory string and shit?")
+								if(LocalFilesAndDirs[1].length != 0){
+									console.log("Local fiels and dirs is not zero or something")
+									LocalFilesSplit = LocalFilesAndDirs[1].split(",")
+									var WrapFlag = 1
+									for(var i = 0; i < LocalFilesSplit.length; ++i){
+										console.log("Hitting the inner I loop with i=" + i)
+										if(LocalFilesSplit[i].toLowerCase() > SearchString.toLowerCase()){
+											cmdline.value ="\/one " + (DirectoryString + "\\" + LocalFilesSplit[i]).replace(CurrentDirectory + "\\", "")
+											//cmdline.value = cmdline.value + LocalFolderSplit[i]
+											WrapFlag = 0
+											break
+										}
+									}
+									if(WrapFlag == 1){
+										cmdline.value = "\/one " + (DirectoryString + "\\" + LocalFolderSplit[0]).replace(CurrentDirectory + "\\", "")
+									}
+								}
+								console.log(LocalFilesAndDirs)
+							}
 						}
+
 					}
 				}
 				break
-			}
+
 		}
 
 	})
