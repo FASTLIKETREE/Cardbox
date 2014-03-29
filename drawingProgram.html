@@ -433,14 +433,14 @@ $(document).ready(function(){
 <script>
 
 var dragobject={
-countemit: 0, z: 0, x: 0, y: 0, offsetx : null, offsety : null, targetobj : null, dragapproved : 0, FinalX : null, FinalY : null,
+countemit: 0, z: 0, x: 0, y: 0, offsetx : null, offsety : null, targetobj : null, dragapproved : 0, FinalX : null, FinalY : null, LastMovedID : null,
 initialize:function(){
 document.onmousedown=this.drag
 document.onmouseup=function()
 {
 	this.dragapproved=0
 	if(ActiveObject != 0){
-	socket.emit("PositionDeck", {"DeckID": ActiveObject.id, "x":FinalX, "y":FinalY})}
+	socket.emit("PositionDeck", {"DeckID": LastMovedID, "x":FinalX, "y":FinalY})}
 }
 },
 drag:function(e){
@@ -473,8 +473,8 @@ console.log(this.x + "<-- this is the clientx")
 this.y=evtobj.clientY
 console.log(this.y + "<-- this is the clienty\n")
 
-FinalX = this.offsetx+evtobj.clientX-this.x+"px"
-FinalY = this.offsety+evtobj.clientY-this.y+"px"
+//FinalX = this.offsetx+evtobj.clientX-this.x+"px"
+//FinalY = this.offsety+evtobj.clientY-this.y+"px"
 
 if (evtobj.preventDefault)
 evtobj.preventDefault()
@@ -491,6 +491,7 @@ this.targetobj.style.top=this.offsety+evtobj.clientY-this.y+"px"
 this.countemit = this.countemit + 1
 FinalX = this.offsetx+evtobj.clientX-this.x+"px"
 FinalY = this.offsety+evtobj.clientY-this.y+"px"
+LastMovedID = ActiveObject.id
 
 if (this.countemit == 10)
 {
