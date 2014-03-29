@@ -147,16 +147,33 @@ $(document).ready(function(){
 						case "\/one":
 							socket.emit("CreateObject", {'src':CurrentDirectory + "\\" + cmdline.value.replace("/\one ", ""), "type":"newcard"})
 							break
+						case "\/roll":
+							var rollkey = SwitchedCommandLineInput[1]
+							var rollkeyarray = rollkey.split("x")
+							var NumberRollPassString = ""
+							if(rollkeyarray.length == 2){
+								if(Number(rollkeyarray[0]) > 0 && Number(rollkeyarray[0]) < 100 && Number(rollkeyarray[1]) > 0 && Number(rollkeyarray[1]) < 10000){
+									for(var i = 1; i < rollkeyarray[0]; ++i){
+										NumberRollPassString = NumberRollPassString + Math.floor((Math.random()*Number(rollkeyarray[1]))+1)  + ","
+									}
+									NumberRollPassString = NumberRollPassString.substring(0, NumberRollPassString.length - 1)
+									console.log(NumberRollPassString + "<-- this is the numbers pass string")
+								}
+							}
+							if(rollkeyarray.length == 1){
+								if(Number(rollkeyarray[0]) > 0 && Number(rollkeyarray[0]) < 10000){
+								NumberRollPassString = NumberRollPassString + Math.floor((Math.random()*Number(rollkeyarray[0]))+1)
+								console.log(NumberRollPassString + "<-- this is the numbers pass string")
+								}
+							}
+							if(NumberRollPassString != ""){
+								console.log("We will emit the random numbers now..")
+							}
+							//socket.emit
+							break
 						case "\/view":
 								var NewWindow = window.open("", "ViewDirectory", "height=200,width=200")
 								NewWindow.document.write("<html><head><title></title></head><body></body>");
-
-								/*
-								imagedividerdiv = document.createElement("div");
-								var CounterDivText = document.createTextNode("")
-								counterdiv.appendChild(CounterDivText)
-								document.body.appendChild(counterdiv);
-								*/
 
 								var CardsAndDeckArray = (LocalDirectoryStructureObject[CurrentDirectory]).split(";")
 								if(CardsAndDeckArray[1].length > 0){
@@ -192,7 +209,7 @@ $(document).ready(function(){
 						default:
 							""
 
-							socket.emit("CommandLineSend", {"CommandLineRaw":cmdline.value})
+							socket.emit("CommandLineSend", {"CommandLineRaw":cmdline.value, "type":"text"})
 							var HTMLText = cmdline.value
 							HTMLText = HTMLText.replace(/\r?\n/g, '<br />');
 							cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
@@ -318,8 +335,10 @@ $(document).ready(function(){
 
 
 	socket.on("CommandLineRecv", function(data){
-		""
-		var HTMLText = data.CommandlineRaw
+		var HTMLText = ""
+		if(data.type == "text"){
+			HTMLText = data.CommandlineRaw
+		}
 		HTMLText = HTMLText.replace(/\r?\n/g, '<br />');
 		cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
 		ScrollToEndOfChatBox()

@@ -397,7 +397,7 @@ function start(route, handle)
 		console.log(data.CommandLineRaw + "<-- this is the command line")
 		//console.log(io.sockets.manager.rooms)
 		//socket.broadcast.to("commandwindows").emit("CommandLineRecv", {"CommandlineRaw":data.CommandLineRaw})
-		socket.broadcast.to("commandwindows").emit("CommandLineRecv", {"CommandlineRaw":data.CommandLineRaw})
+		socket.broadcast.to("commandwindows").emit("CommandLineRecv", {"CommandlineRaw":data.CommandLineRaw, "type":data.type})
 		//socket.emit("CommandLineRecv", {"CommandlineRaw":data.CommandLineRaw})
 	})
 
