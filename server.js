@@ -8,6 +8,7 @@ GameWindowConnectionObject = {};
 HandWindowConnectionObject = {};
 CommandWindowConnectionObject = {};
 DirectoryStructureObject = {};
+ConnectedUserObject = {}
 
 IDReaperArray = [];
 
@@ -83,7 +84,7 @@ function start(route, handle)
 	var server = http.createServer(onRequest);
 	sio = io.listen(server)
 	sio.set("log level", 1)
-	server.listen("8080", "127.0.0.1")
+	server.listen("80")
 
 
 	sio.sockets.on('connection', function(socket){
@@ -378,6 +379,37 @@ function start(route, handle)
 		console.log(MasterCardAndDeckStateObject)
 	})
 
+	socket.on("login", function(data){
+		console.log("This has hit the login with ->" + data.name)
+		if(data.name in ConnectedUserObject){
+			if(ConnectedUserObject[data.name] == 1){
+				sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":data.name + " is already taken.", "type":"function"})
+			}
+
+			if(ConnectedUserObject[data.name] == 0){
+				socket.emit("login", {"name":data.name})
+				ConnectedUserObject[data.name] = 1
+				ConnectedUserObject[data.oldname] = 0
+				sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":data.name + " has logged in.", "type":"function"})
+				sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":data.oldname + " has logged out.", "type":"function"})
+			}
+		}else{
+			console.log("Object not in the shit! ->" + data.name)
+			ConnectedUserObject[data.name] = 1
+			ConnectedUserObject[data.oldname] = 0
+			socket.emit("login", {"name":data.name})
+			sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":data.name + " has logged in.", "type":"function"})
+		}
+
+	})
+
+	socket.on("logout", function(data){
+		sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":data.oldname + " has logged out.", "type":"function"})
+		if(data.name in ConnectedUserObject){
+			ConnectedUserObject[data.name] = 0
+		}
+	})
+
 	socket.on("Clear", function(){
 		console.log("This has hit the clear functionality!")
 		for(key in MasterCardAndDeckStateObject){
@@ -393,12 +425,11 @@ function start(route, handle)
 		console.log(MasterCardAndDeckStateObject + "<-- this is master object after clear")
 	})
 
-	socket.on("CommandLineSend", function(data){
-		console.log(data.CommandLineRaw + "<-- this is the command line")
-		//console.log(io.sockets.manager.rooms)
-		//socket.broadcast.to("commandwindows").emit("CommandLineRecv", {"CommandlineRaw":data.CommandLineRaw})
-		socket.broadcast.to("commandwindows").emit("CommandLineRecv", {"CommandlineRaw":data.CommandLineRaw, "type":data.type})
-		//socket.emit("CommandLineRecv", {"CommandlineRaw":data.CommandLineRaw})
+	socket.on("CommandWindowUpdate", function(data){
+		console.log(data.UpdateString + "<-- this is the command line")
+		sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":data.UpdateString, "type":data.type})
+		//socket.broadcast.to("commandwindows").emit("CommandWindowUpdate", {"UpdateString":data.UpdateString, "type":data.type})
+
 	})
 
 	socket.on("GetDirectoryStructure", function(){

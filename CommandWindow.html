@@ -61,6 +61,7 @@ $(document).ready(function(){
 	var rooms = 9
 	//var CurrentDirectory = "root:\>"
 	var CurrentDirectory = "C:\\AANode\\pictures"
+	var CurrentUser = "Unknown"
 	socket = io.connect();
 	socket.emit("CommandWindowCreated")
 	socket.emit("GetDirectoryStructure")
@@ -88,7 +89,6 @@ $(document).ready(function(){
 					var SwitchedCommandLineInput = cmdline.value.split(" ")
 					switch(SwitchedCommandLineInput[0]){
 						case "dir":
-							""
 							var FilesAndDirsCurrentDirectory = LocalDirectoryStructureObject[CurrentDirectory]
 							console.log(FilesAndDirsCurrentDirectory + "<-- this is the directory files and dirts after selecting object")
 							console.log("Is this the split htat is faliing?")
@@ -141,8 +141,8 @@ $(document).ready(function(){
 							commandwindowdirectorydiv.innerHTML = CurrentDirectory.replace(RootReplaceKey, "root")
 							break
 						case "\/new":
-						case "\/deck":
 							socket.emit("CreateObject", {'deck':CurrentDirectory, "type":"newdeck"})
+							socket.emit("CommandWindowUpdate", {"UpdateString":"Has created a deck with ID=", "type":"function", "user":CurrentUser})
 							break
 						case "\/one":
 							socket.emit("CreateObject", {'src':CurrentDirectory + "\\" + cmdline.value.replace("/\one ", ""), "type":"newcard"})
@@ -153,7 +153,8 @@ $(document).ready(function(){
 							var NumberRollPassString = ""
 							if(rollkeyarray.length == 2){
 								if(Number(rollkeyarray[0]) > 0 && Number(rollkeyarray[0]) < 100 && Number(rollkeyarray[1]) > 0 && Number(rollkeyarray[1]) < 10000){
-									for(var i = 1; i < rollkeyarray[0]; ++i){
+									NumberRollPassString = NumberRollPassString + "Rolling ("+rollkeyarray[0]+"x"+rollkeyarray[1]+"): "
+									for(var i = 0; i < rollkeyarray[0]; ++i){
 										NumberRollPassString = NumberRollPassString + Math.floor((Math.random()*Number(rollkeyarray[1]))+1)  + ","
 									}
 									NumberRollPassString = NumberRollPassString.substring(0, NumberRollPassString.length - 1)
@@ -162,12 +163,13 @@ $(document).ready(function(){
 							}
 							if(rollkeyarray.length == 1){
 								if(Number(rollkeyarray[0]) > 0 && Number(rollkeyarray[0]) < 10000){
+								NumberRollPassString = NumberRollPassString + "Rolling (1x"+rollkeyarray[0]+"): "
 								NumberRollPassString = NumberRollPassString + Math.floor((Math.random()*Number(rollkeyarray[0]))+1)
 								console.log(NumberRollPassString + "<-- this is the numbers pass string")
 								}
 							}
 							if(NumberRollPassString != ""){
-								console.log("We will emit the random numbers now..")
+								socket.emit("CommandWindowUpdate", {"UpdateString":NumberRollPassString, "type":"function", "user":CurrentUser})
 							}
 							//socket.emit
 							break
@@ -206,15 +208,18 @@ $(document).ready(function(){
 						case "\/clear":
 							socket.emit("Clear")
 							break
+						case "\/login":
+							socket.emit("login", {"name":SwitchedCommandLineInput[1], "oldname":CurrentUser})
+							break
 						default:
-							""
-
-							socket.emit("CommandLineSend", {"CommandLineRaw":cmdline.value, "type":"text"})
+							socket.emit("CommandWindowUpdate", {"UpdateString":cmdline.value, "type":"text", "user":CurrentUser})
+							/*
 							var HTMLText = cmdline.value
 							HTMLText = HTMLText.replace(/\r?\n/g, '<br />');
 							cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
 							console.log(cmdline.value + "<-- this is the current innerHTML")
 							ScrollToEndOfChatBox()
+							*/
 							break
 					}
 				}
@@ -332,13 +337,26 @@ $(document).ready(function(){
 
 	})
 
+	window.onbeforeunload = function ()
+	{
+		//socket.emit("LeaveRoom")
+		socket.emit("logout", {"name":CurrentUser})
+		HandWindow.close()
+	}
 
-
-	socket.on("CommandLineRecv", function(data){
+	socket.on("CommandWindowUpdate", function(data){
 		var HTMLText = ""
+		console.log("WHAT THE FUCK WHY ARENT WE ")
+		//we should have a color scheme for the command window that differentiates text and commands
+		console.log(data.UpdateString +"<-- this is the update string...")
 		if(data.type == "text"){
-			HTMLText = data.CommandlineRaw
+			HTMLText = data.UpdateString
 		}
+
+		if(data.type == "function"){
+			HTMLText = data.UpdateString
+		}
+
 		HTMLText = HTMLText.replace(/\r?\n/g, '<br />');
 		cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
 		ScrollToEndOfChatBox()
@@ -351,6 +369,11 @@ $(document).ready(function(){
 		//LocalDirectoryStructureObject = data.DirectoryStructure
 		//console.log(data.DirectoryStructure)
 		console.log(LocalDirectoryStructureObject)
+	})
+
+	socket.on("login", function(data){
+		console.log("This has gotten to the login stage...")
+		CurrentUser = data.name
 	})
 
 })
