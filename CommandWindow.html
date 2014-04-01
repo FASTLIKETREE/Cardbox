@@ -144,7 +144,16 @@ $(document).ready(function(){
 							socket.emit("CreateObject", {'deck':CurrentDirectory, "type":"newdeck"})
 							break
 						case "\/one":
-							socket.emit("CreateObject", {'src':CurrentDirectory + "\\" + cmdline.value.replace("/\one ", ""), "type":"newcard"})
+							var CardName = cmdline.value.replace("/\one ", "")
+							var DirsAndFiles = LocalDirectoryStructureObject[CurrentDirectory].split(";")
+							var Files = DirsAndFiles[1].split(",")
+							console.log(Files + "<-- this is files")
+							for(var i = 0; i < Files.length; ++i){
+								if(CardName == Files[i]){
+									socket.emit("CreateObject", {'src':CurrentDirectory + "\\" + CardName, "type":"newcard"})
+									break
+								}
+							}
 							break
 						case "\/roll":
 							var rollkey = SwitchedCommandLineInput[1]
@@ -324,7 +333,7 @@ $(document).ready(function(){
 										}
 									}
 									if(WrapFlag == 1){
-										cmdline.value = "\/one " + (DirectoryString + "\\" + LocalFolderSplit[0]).replace(CurrentDirectory + "\\", "")
+										cmdline.value = "\/one " + (DirectoryString + "\\" + LocalFilesSplit[0]).replace(CurrentDirectory + "\\", "")
 									}
 								}
 								console.log(LocalFilesAndDirs)
