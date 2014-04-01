@@ -61,7 +61,7 @@ $(document).ready(function(){
 	var rooms = 9
 	//var CurrentDirectory = "root:\>"
 	var CurrentDirectory = "C:\\AANode\\pictures"
-	var CurrentUser = "Unknown"
+	//var CurrentUser = "Unknown"
 	socket = io.connect();
 	socket.emit("CommandWindowCreated")
 	socket.emit("GetDirectoryStructure")
@@ -142,7 +142,6 @@ $(document).ready(function(){
 							break
 						case "\/new":
 							socket.emit("CreateObject", {'deck':CurrentDirectory, "type":"newdeck"})
-							socket.emit("CommandWindowUpdate", {"UpdateString":"Has created a deck with ID=", "type":"function", "user":CurrentUser})
 							break
 						case "\/one":
 							socket.emit("CreateObject", {'src':CurrentDirectory + "\\" + cmdline.value.replace("/\one ", ""), "type":"newcard"})
@@ -169,7 +168,8 @@ $(document).ready(function(){
 								}
 							}
 							if(NumberRollPassString != ""){
-								socket.emit("CommandWindowUpdate", {"UpdateString":NumberRollPassString, "type":"function", "user":CurrentUser})
+								//socket.emit("CommandWindowUpdate", {"UpdateString":NumberRollPassString, "type":"function", "user":CurrentUser})
+								socket.emit("CommandWindowUpdate", {"UpdateString":NumberRollPassString, "type":"function"})
 							}
 							//socket.emit
 							break
@@ -209,10 +209,12 @@ $(document).ready(function(){
 							socket.emit("Clear")
 							break
 						case "\/login":
-							socket.emit("login", {"name":SwitchedCommandLineInput[1], "oldname":CurrentUser})
+							//socket.emit("login", {"name":SwitchedCommandLineInput[1], "oldname":CurrentUser})
+							socket.emit("login", {"name":SwitchedCommandLineInput[1]})
 							break
 						default:
-							socket.emit("CommandWindowUpdate", {"UpdateString":cmdline.value, "type":"text", "user":CurrentUser})
+							//socket.emit("CommandWindowUpdate", {"UpdateString":cmdline.value, "type":"text", "user":CurrentUser})
+							socket.emit("CommandWindowUpdate", {"UpdateString":cmdline.value, "type":"text"})
 							/*
 							var HTMLText = cmdline.value
 							HTMLText = HTMLText.replace(/\r?\n/g, '<br />');
@@ -340,7 +342,7 @@ $(document).ready(function(){
 	window.onbeforeunload = function ()
 	{
 		//socket.emit("LeaveRoom")
-		socket.emit("logout", {"name":CurrentUser})
+		socket.emit("logout")
 		HandWindow.close()
 	}
 
@@ -370,12 +372,6 @@ $(document).ready(function(){
 		//console.log(data.DirectoryStructure)
 		console.log(LocalDirectoryStructureObject)
 	})
-
-	socket.on("login", function(data){
-		console.log("This has gotten to the login stage...")
-		CurrentUser = data.name
-	})
-
 })
 
 

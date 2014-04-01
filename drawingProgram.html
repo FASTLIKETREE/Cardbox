@@ -14,6 +14,7 @@
 	socket = io.connect();
 	socket.emit("MainWindowCreated")
 
+	var CurrentUser = ""
 	var HandWindow = 0
 	var BoundDeckObject = 0
 	var ActiveObject = 0
@@ -24,8 +25,10 @@ function DCobject(){
 	this.id = null
 	this.isdeck = null
 	this.imgsrc = null
+	this.quantity = null
 
 	var counterdiv = null
+	var iddiv = null
 	var imageobject = new Image();
 
 	var mouseenter = {
@@ -66,10 +69,11 @@ function DCobject(){
 		imageobject.removeEventListener("mouseleave", mouseenterbound)
 	}
 
-	this.render = function(namestring, x, y)
+	this.render = function(namestring, x, y, ID, quantity, facedown)
 	{
-		if(this.isdeck == 0)
+		if(this.isdeck == 0 && facedown != 1)
 		{
+			console.log("This is in the face up card section, is it not working?")
 			this.imgsrc = namestring
 			imageobject.src = namestring
 			imageobject.style.position="absolute"
@@ -80,6 +84,23 @@ function DCobject(){
 			imageobject.addEventListener("mouseleave", mouseleave, false)
 			document.body.appendChild(imageobject)
 		}
+
+		if(this.isdeck == 0 && facedown == 1)
+		{
+			console.log("This is in the face down section, is it not working?")
+			this.imgsrc = namestring
+			imageobject.src = "pictures/AnotherGroupOfCards/Deck.png"
+			imageobject.style.position="absolute"
+			console.log("X location = " + x)
+			console.log("Y location = " + y)
+			imageobject.style.left = x
+			imageobject.style.top = y
+			imageobject.setAttribute("class", "drag")
+			imageobject.addEventListener("mouseenter", mouseenter, false)
+			imageobject.addEventListener("mouseleave", mouseleave, false)
+			document.body.appendChild(imageobject)
+		}
+
 		if(this.isdeck == 1)
 		{
 			this.imgsrc = "pictures/AnotherGroupOfCards/Deck.png"
@@ -96,13 +117,26 @@ function DCobject(){
 			document.body.appendChild(imageobject)
 		}
 
+			console.log("This is the quantity ->" + quantity)
+			if(quantity == null){
+				quantity = ""
+			}
 			counterdiv = document.createElement("div");
 			counterdiv.style.position="absolute"
 			counterdiv.style.left = x
-			counterdiv.style.top = (Number(y.replace("px", "") - 15 )) + "px"
-			var CounterDivText = document.createTextNode("")
+			counterdiv.style.top = (Number(y.replace("px", "") - 30 )) + "px"
+			var CounterDivText = document.createTextNode(quantity.toString())
 			counterdiv.appendChild(CounterDivText)
 			document.body.appendChild(counterdiv);
+
+			iddiv = document.createElement("div");
+			iddiv.style.position="absolute"
+			iddiv.style.left = x
+			console.log("This is the image iD that we are appending? -> " + ID)
+			iddiv.style.top = (Number(y.replace("px", "") - 15 )) + "px"
+			var IDDivText = document.createTextNode("ID:" + ID)
+			iddiv.appendChild(IDDivText)
+			document.body.appendChild(iddiv);
 	}
 
 	this.setposition = function(posx, posy)
@@ -111,7 +145,9 @@ function DCobject(){
 		imageobject.style.top = posy
 		console.log(counterdiv.innerHTML + "<-- this is the inner html of the counter div thing when dragging!")
 		counterdiv.style.left = posx
-		counterdiv.style.top = (Number(posy.replace("px", "") - 15 )) + "px"
+		counterdiv.style.top = (Number(posy.replace("px", "") - 30 )) + "px"
+		iddiv.style.left = posx
+		iddiv.style.top = (Number(posy.replace("px", "") - 15 )) + "px"
 	}
 
 	this.updatecounterdiv = function(Quantity)
@@ -123,12 +159,15 @@ function DCobject(){
 			CurrentValue = ""
 		}
 		counterdiv.innerHTML = CurrentValue
+		this.quantity = CurrentValue
 	}
 
 	this.delete = function()
 	{
 		delete DecksAndCards[this.id]
 		imageobject.parentNode.removeChild(imageobject)
+		counterdiv.parentNode.removeChild(counterdiv)
+		iddiv.parentNode.removeChild(iddiv)
 		ActiveObject = 0
 		console.log("Does this get here and remove the shit?")
 		if(this.isdeck == 1){
@@ -178,36 +217,34 @@ $(document).ready(function(){
 					socket.emit("DeleteObject", {"ObjectID":ActiveObject.id})
 				}
 				break
-			case 33: //Keycode 33 = Page up (Add 20)
-				if(ActiveObject != 0){
-					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"20"})
-				}
-			break
-			case 34: //Keycode 34 = Page down (Subtract 20)
-				if(ActiveObject != 0){
-					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-20"})
-				}
-			break
-			case 37: //Keycode 37 = Left Arrow (Subtract 5)
-				if(ActiveObject != 0){
-					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-5"})
-				}
-			break
-			case 38: //Keycode 38 = Up Arrow (Add 1)
-				if(ActiveObject != 0){
+			case 107: //Keycode 107 = Right hand +
+				if(ActiveObject != 0 && !e.altKey && !e.shiftKey){
 					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"1"})
 				}
-			break
-			case 39: //Keycode 39 = Right Arrow (Add 5)
-				if(ActiveObject != 0){
+				if(ActiveObject != 0 && !e.altKey && e.shiftKey){
 					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"5"})
 				}
-			break
-			case 40: //Keycode 40 = Down Arrow (Subtract 1)
-				if(ActiveObject != 0){
+				if(ActiveObject != 0 && e.altKey && !e.shiftKey){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"20"})
+				}
+				if(ActiveObject != 0 && e.altKey && e.shiftKey){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"100"})
+				}
+				break
+			case 109: //Keycode 109 = Right hand -
+				if(ActiveObject != 0 && !e.altKey && !e.shiftKey){
 					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-1"})
 				}
-			break
+				if(ActiveObject != 0 && !e.altKey && e.shiftKey){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-5"})
+				}
+				if(ActiveObject != 0 && e.altKey && !e.shiftKey){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-20"})
+				}
+				if(ActiveObject != 0 && e.altKey && e.shiftKey){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-100"})
+				}
+				break
 
 			case 46: //Keycode 46 = Delete Key (Delete deck)
 				if(BoundDeckObject != 0){
@@ -216,7 +253,7 @@ $(document).ready(function(){
 				break
 			case 65: //Keycode 65 = A (Add to deck and shuffle)
 				if(ActiveObject != 0 && ActiveObject.isdeck == 0){
-					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "Key":"m"})
+					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "Key":"a"})
 				}
 				break
 			case 66: //Keycode 66 = B (bind deck) for deck object
@@ -251,8 +288,9 @@ $(document).ready(function(){
 			case 71: //Keycode 71 = G (Grab the active card object and put it into your hand)
 				if(ActiveObject != 0 && ActiveObject.isdeck == 0){
 					console.log(ActiveObject.imgsrc + "<-- This card has been grabbed")
+					console.log(ActiveObject.quantity + "<-- this is the quantity when grabbed!")
 					//socket.emit("GrabCard", {"CardSRC":ActiveObject.imgsrc, "CardID":ActiveObject.id})
-					socket.emit("CreateObject", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "type":"boardtohand"})
+					socket.emit("CreateObject", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "quantity":ActiveObject.quantity,"type":"boardtohand"})
 				}
 				break
 			case 72: //Keycode 72 = H (draw a card from bound deck to hand)
@@ -268,12 +306,17 @@ $(document).ready(function(){
 				break
 			case 83: //Keycode 83 = S (shuffle bound deck)
 				if(BoundDeckObject != 0){
-					socket.emit("ShuffleDeck", {"DeckID":BoundDeckObject.id})
+					socket.emit("ShuffleDeck", {"ObjectID":BoundDeckObject.id})
 				}
 				break
 			case 84: //Keycode 84 = T (add ActiveObject to top of deck)
 				if(BoundDeckObject != 0 && ActiveObject.isdeck == 0){
 					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "Key":"t"})
+				}
+				break
+			case 87: //Keycode 87 = W (Draw card face down to board)
+				if(BoundDeckObject != 0){
+					socket.emit("CreateObject", {"facedown":"1", "type":"drawboard"})
 				}
 				break
 		}
@@ -285,9 +328,11 @@ $(document).ready(function(){
 		console.log(data.ObjectID + "<-- this is the card ID")
 		console.log(data.x + "<-- this is the card x")
 		console.log(data.y + "<-- this is the card y")
+		console.log(data.quantity + "<-- this is thequantity")
 
 		ActiveObject = new DCobject()
 		ActiveObject.id = data.ObjectID
+		ActiveObject.quantity = data.quantity
 
 		if(data.type == "deck"){
 			ActiveObject.isdeck = 1
@@ -297,7 +342,7 @@ $(document).ready(function(){
 		}
 
 		DecksAndCards[data.ObjectID] = ActiveObject
-		ActiveObject.render(data.ObjectSrc, data.x, data.y)
+		ActiveObject.render(data.ObjectSrc, data.x, data.y, data.ObjectID, data.quantity, data.facedown)
 	})
 
 	socket.on("PositionDeck", function(data){
@@ -332,7 +377,7 @@ $(document).ready(function(){
 		ActiveObject.imgsrc = data.CardSrc
 		ActiveObject.isdeck = 0
 		DecksAndCards[data.CardID] = ActiveObject
-		ActiveObject.render(data.CardSrc)
+		ActiveObject.render(data.CardSrc, 0, 0, data.CardID, data.quantity)
 	})
 
 	socket.on("DeleteObject", function(data){
@@ -345,77 +390,6 @@ $(document).ready(function(){
 		console.log(data)
 	})
 
-	/*
-	socket.on("CreateStandardGameElements")
-
-	socket.on('DecksDir', function(data){
-		data = data.slice(0, data.length -1)
-		var DecksArray = data.split(";")
-		console.log("Decks dir!")
-		//console.log(DecksArray.join())
-		for(var i = 0; i < DecksArray.length; i=i+1)
-		{
-			var DeckArray = DecksArray[i].split(",")
-			//console.log(DeckArray.join())
-			DeckArray.splice(1,1)
-			//console.log(DeckArray.join())
-
-			var cardsButtonView = document.createElement("button");
-			cardsButtonView.style.position="absolute"
-			cardsButtonView.style.left = "0px"
-			cardsButtonView.style.top = i*25 + "px"
-			//DistanceYViewButton = DistanceYViewButton + 6
-
-			var cardsButtonCreate = document.createElement("button");
-			cardsButtonCreate.style.position="absolute"
-			cardsButtonCreate.style.left = "200px"
-			cardsButtonCreate.style.top = i*25 + "px"
-
-			//console.log(data + "<-- this is the split array")
-			//console.log(data.length + "<-- this is the length")
-
-			var buttonTextView = document.createTextNode("View_" + DeckArray[0])
-			var buttonTextCreate = document.createTextNode("Create_" + DeckArray[0])
-			cardsButtonView.appendChild(buttonTextView)
-			cardsButtonCreate.appendChild(buttonTextCreate)
-
-			cardsButtonCreate.onclick=(function(namestring)
-			{
-				return function()
-				{
-					socket.emit("CreateObject", {'deck':namestring, "type":"newdeck"})
-					//ActiveObject = new deckobject()
-					//ActiveObject.createdeck(namestring)
-				}
-			})(DeckArray[0])
-
-
-			cardsButtonView.onclick = (function(namestring){
-				return function(){
-				//console.log("This should emit something to the socket, i don't see it")
-				//console.log(namestring + "<-- this is data i")
-				var NewWindow = window.open("", "MsgWindow", "height=200,width=200")
-				NewWindow.document.write("<html><head><title></title></head><body></body>");
-				CardsAndDeckArray = namestring.split(",")
-
-					for(var k = 1; k < CardsAndDeckArray.length; ++k)
-					{
-						var image = new Image();
-						//console.log("pictures/" + CardsAndDeckArray[0] + "/" + CardsAndDeckArray[k] + "<-- this is the image source")
-						image.src = "pictures/" + CardsAndDeckArray[0] + "/" + CardsAndDeckArray[k];
-						NewWindow.document.body.appendChild(image)
-					}
-				}
-			})(DeckArray.join())
-
-			document.body.appendChild(cardsButtonView);
-			document.body.appendChild(cardsButtonCreate);
-
-		}
-	})
-
-	socket.emit("PopulateDecks")
-	*/
 })
 
 /***********************************************
