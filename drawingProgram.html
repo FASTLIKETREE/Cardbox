@@ -24,15 +24,19 @@ function DCobject(){
 	var self = this
 	this.id = null
 	this.isdeck = null
+	this.img = null
 	this.imgsrc = null
 	this.quantity = null
 	this.imgwidth = null
 	this.imgheight = null
+	this.counterdiv = null
+	this.iddiv = null
 
 	var counterdiv = null
 	var iddiv = null
 	var imageobject = new Image();
-
+	this.img = imageobject
+	imageobject.style.zIndex = 5
 
 	var mouseenter = {
 		handleEvent: function(){
@@ -91,7 +95,6 @@ function DCobject(){
 		}
 
 		imageobject.onload = function(){
-			alert("Some stuff i guess")
 			this.imgwidth = this.width
 			this.height = this.height
 
@@ -107,7 +110,13 @@ function DCobject(){
 			if(quantity == null){
 				quantity = ""
 			}
+
+
+
+
 			counterdiv = document.createElement("div");
+			counterdiv.style.zIndex = 6
+			this.counterdiv = counterdiv
 			counterdiv.style.position="absolute"
 			counterdiv.style.left = x
 			counterdiv.style.top = (Number(y.replace("px", "") - 30 )) + "px"
@@ -116,6 +125,8 @@ function DCobject(){
 			document.body.appendChild(counterdiv);
 
 			iddiv = document.createElement("div");
+			iddiv.style.zIndex = 6
+			this.iddiv = iddiv
 			iddiv.style.position="absolute"
 			iddiv.style.left = x
 			console.log("This is the image iD that we are appending? -> " + ID)
@@ -321,6 +332,23 @@ $(document).ready(function(){
 					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "Key":"m"})
 				}
 				break
+
+			case 79: //Keycode 79 = O (Put card on bottoM of bound deck)
+				if(ActiveObject != 0){
+					for(var key in DecksAndCards){
+						if(DecksAndCards[key].img.style.zIndex == -1){
+							DecksAndCards[key].img.style.zIndex = 5
+						}
+					}
+				}
+				break
+
+			case 80: //Keycode 80 = P (Permanently fix card to location)
+				if(ActiveObject != 0){
+					ActiveObject.img.style.zIndex = -1
+				}
+				break
+
 			case 83: //Keycode 83 = S (shuffle bound deck)
 				if(BoundDeckObject != 0){
 					socket.emit("ShuffleDeck", {"ObjectID":BoundDeckObject.id})
@@ -334,6 +362,26 @@ $(document).ready(function(){
 			case 87: //Keycode 87 = W (Draw card face down to board)
 				if(BoundDeckObject != 0){
 					socket.emit("CreateObject", {"facedown":"1", "type":"drawboard"})
+				}
+				break
+
+			case 88: //Keycode 88 = x (Increase Z order of active object)
+				if(ActiveObject != 0){
+					ActiveObject.img.style.zIndex = Number(ActiveObject.img.style.zIndex) + 1
+					ActiveObject.counterdiv.style.zIndex = Number(ActiveObject.counterdiv.style.zIndex) + 1
+					ActiveObject.iddiv.style.zIndex = Number(ActiveObject.iddiv.style.zIndex) + 1
+					console.log(Number(ActiveObject.img.style.zIndex) + "<--- This is the new Z order")
+				}
+				break
+
+			case 90: //Keycode 90 = Z (Decrease Z order of active object)
+				if(ActiveObject != 0){
+					if(Number(ActiveObject.img.style.zIndex) > 0){
+						ActiveObject.img.style.zIndex = Number(ActiveObject.img.style.zIndex) - 1
+						ActiveObject.counterdiv.style.zIndex = Number(ActiveObject.counterdiv.style.zIndex) + 1
+						ActiveObject.iddiv.style.zIndex = Number(ActiveObject.iddiv.style.zIndex) + 1
+					}
+					console.log(Number(ActiveObject.img.style.zIndex) + "<--- This is the new Z order, it can't go below 0")
 				}
 				break
 		}
