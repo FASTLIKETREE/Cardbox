@@ -39,6 +39,7 @@ function DeckOrCardObject()
 	this.quantity = null
 	this.cmdwindowname = null
 	this.cardarray = new Array()
+	this.graveyardarray = new Array()
 }
 
 function start(route, handle)

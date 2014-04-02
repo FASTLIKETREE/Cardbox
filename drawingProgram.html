@@ -26,10 +26,13 @@ function DCobject(){
 	this.isdeck = null
 	this.imgsrc = null
 	this.quantity = null
+	this.imgwidth = null
+	this.imgheight = null
 
 	var counterdiv = null
 	var iddiv = null
 	var imageobject = new Image();
+
 
 	var mouseenter = {
 		handleEvent: function(){
@@ -71,51 +74,34 @@ function DCobject(){
 
 	this.render = function(namestring, x, y, ID, quantity, facedown)
 	{
-		if(this.isdeck == 0 && facedown != 1)
-		{
+		if(this.isdeck == 0 && facedown != 1){
 			console.log("This is in the face up card section, is it not working?")
 			this.imgsrc = namestring
 			imageobject.src = namestring
-			imageobject.style.position="absolute"
-			imageobject.style.left = x
-			imageobject.style.top = y
-			imageobject.setAttribute("class", "drag")
-			imageobject.addEventListener("mouseenter", mouseenter, false)
-			imageobject.addEventListener("mouseleave", mouseleave, false)
-			document.body.appendChild(imageobject)
 		}
 
-		if(this.isdeck == 0 && facedown == 1)
-		{
-			console.log("This is in the face down section, is it not working?")
+		if(this.isdeck == 0 && facedown == 1){
 			this.imgsrc = namestring
 			imageobject.src = "pictures/AnotherGroupOfCards/Deck.png"
-			imageobject.style.position="absolute"
-			console.log("X location = " + x)
-			console.log("Y location = " + y)
-			imageobject.style.left = x
-			imageobject.style.top = y
-			imageobject.setAttribute("class", "drag")
-			imageobject.addEventListener("mouseenter", mouseenter, false)
-			imageobject.addEventListener("mouseleave", mouseleave, false)
-			document.body.appendChild(imageobject)
 		}
 
-		if(this.isdeck == 1)
-		{
+		if(this.isdeck == 1){
 			this.imgsrc = "pictures/AnotherGroupOfCards/Deck.png"
 			imageobject.src = "pictures/AnotherGroupOfCards/Deck.png"
+		}
+
+		imageobject.onload = function(){
+			alert("Some stuff i guess")
+			this.imgwidth = this.width
+			this.height = this.height
+
 			imageobject.style.position="absolute"
-			console.log("X location = " + x)
-			console.log("Y location = " + y)
 			imageobject.style.left = x
 			imageobject.style.top = y
 			imageobject.setAttribute("class", "drag")
 			imageobject.addEventListener("mouseenter", mouseenter, false)
 			imageobject.addEventListener("mouseleave", mouseleave, false)
-			//socket.emit("CreateDeck", {'deck':namestring})
 			document.body.appendChild(imageobject)
-		}
 
 			console.log("This is the quantity ->" + quantity)
 			if(quantity == null){
@@ -137,6 +123,37 @@ function DCobject(){
 			var IDDivText = document.createTextNode("ID:" + ID)
 			iddiv.appendChild(IDDivText)
 			document.body.appendChild(iddiv);
+		}
+		/*
+			imageobject.style.position="absolute"
+			imageobject.style.left = x
+			imageobject.style.top = y
+			imageobject.setAttribute("class", "drag")
+			imageobject.addEventListener("mouseenter", mouseenter, false)
+			imageobject.addEventListener("mouseleave", mouseleave, false)
+			document.body.appendChild(imageobject)
+
+			console.log("This is the quantity ->" + quantity)
+			if(quantity == null){
+				quantity = ""
+			}
+			counterdiv = document.createElement("div");
+			counterdiv.style.position="absolute"
+			counterdiv.style.left = x
+			counterdiv.style.top = (Number(y.replace("px", "") - 30 )) + "px"
+			var CounterDivText = document.createTextNode(quantity.toString())
+			counterdiv.appendChild(CounterDivText)
+			document.body.appendChild(counterdiv);
+
+			iddiv = document.createElement("div");
+			iddiv.style.position="absolute"
+			iddiv.style.left = x
+			console.log("This is the image iD that we are appending? -> " + ID)
+			iddiv.style.top = (Number(y.replace("px", "") - 15 )) + "px"
+			var IDDivText = document.createTextNode("ID:" + ID)
+			iddiv.appendChild(IDDivText)
+			document.body.appendChild(iddiv);
+		*/
 	}
 
 	this.setposition = function(posx, posy)
