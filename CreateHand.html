@@ -121,7 +121,8 @@ function cardobject(){
 		if(ActiveObject != 0){
 			switch(e.keyCode){
 				case 8: //Keycode 8 = backspace key (Delete card (not deck))
-					socket.emit("DeleteObject", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id})
+					ActiveObject.delete()
+					//socket.emit("DeleteObject", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id})
 					break
 				case 107: //Keycode 107 = Right hand + (Add 20)
 					if(ActiveObject != 0 && !e.altKey && !e.shiftKey){
@@ -153,7 +154,7 @@ function cardobject(){
 					break
 				case 65: //Keycode 65 = A (Add to deck and shuffle)
 					//socket.emit("AddDeckActiveCardAndShuffle", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id})
-					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "Key":"a"})
+					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "fromhand":1, "Key":"a"})
 					ActiveObject.delete()
 					break
 				case 66: // Keycode 66 = B (send card to Board)
@@ -166,11 +167,11 @@ function cardobject(){
 					ActiveObject.delete()
 					break
 				case 77: //Keycode 77 = M (Put card on bottoM of bound deck)
-					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "Key":"m"})
+					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "fromhand":1, "Key":"m"})
 					ActiveObject.delete()
 					break
 				case 84: //Keycode 84 = T (add ActiveObject to top of deck)
-					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "Key":"t"})
+					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "fromhand":1, "Key":"t"})
 					ActiveObject.delete()
 					break
 			}
@@ -191,12 +192,13 @@ function cardobject(){
 		ActiveObject.rendercard(data.ObjectSrc, data.x, data.y, data.ObjectID, data.quantity)
 	})
 
-
+/*
 	socket.on("DeleteObject", function(data){
 		console.log(data.ObjectID)
 		console.log(data)
 		CardsObject[data.ObjectID].delete()
 	})
+	*/
 
 	socket.on("login", function(data){
 		console.log("This has gotten to the login stage... with login dude ->" + data.name)
@@ -207,7 +209,6 @@ function cardobject(){
 		console.log(data.Quantity + "<-- this is quantity...")
 		CardsObject[data.ObjectID].updatecounterdiv(data.Quantity)
 	})
-
 
 	socket.on("PositionDeck", function(data){
 		CardsObject[data.DeckID].setposition(data.x, data.y)

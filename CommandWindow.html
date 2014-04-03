@@ -141,7 +141,7 @@ $(document).ready(function(){
 							commandwindowdirectorydiv.innerHTML = CurrentDirectory.replace(RootReplaceKey, "root")
 							break
 						case "\/new":
-							socket.emit("CreateObject", {'deck':CurrentDirectory, "type":"newdeck"})
+							socket.emit("CreateObject", {'deck':CurrentDirectory, "type":"newdeck", "x":"100px", "y":"100px"})
 							break
 						case "\/one":
 							var CardName = cmdline.value.replace("/\one ", "")
@@ -150,7 +150,7 @@ $(document).ready(function(){
 							console.log(Files + "<-- this is files")
 							for(var i = 0; i < Files.length; ++i){
 								if(CardName == Files[i]){
-									socket.emit("CreateObject", {'src':CurrentDirectory + "\\" + CardName, "type":"newcard"})
+									socket.emit("CreateObject", {'src':CurrentDirectory + "\\" + CardName, "type":"newcard", "x":"100px", "y":"300px"})
 									break
 								}
 							}

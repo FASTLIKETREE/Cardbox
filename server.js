@@ -114,7 +114,8 @@ function start(route, handle)
 		{
 			if(MasterCardAndDeckStateObject[key].deck == 0 && MasterCardAndDeckStateObject[key].owner == null){
 				//socket.emit("CreateObject", {"ObjectSrc":MasterCardAndDeckStateObject[key].cardarray[0], "ObjectID":key, "x":MasterCardAndDeckStateObject[key].x, "y":MasterCardAndDeckStateObject[key].y, "type":"card"})
-				socket.emit("CreateObject", {"ObjectSrc":MasterCardAndDeckStateObject[key].cardarray[0], "ObjectID":key, "x":MasterCardAndDeckStateObject[key].x, "y":MasterCardAndDeckStateObject[key].y})
+				console.log("SERVER FACE DOWN OF THE CARD? " + MasterCardAndDeckStateObject[key].facedown)
+				socket.emit("CreateObject", {"ObjectSrc":MasterCardAndDeckStateObject[key].cardarray[0], "ObjectID":key, "x":MasterCardAndDeckStateObject[key].x, "y":MasterCardAndDeckStateObject[key].y, "facedown":MasterCardAndDeckStateObject[key].facedown})
 			}
 
 			if(MasterCardAndDeckStateObject[key].deck == 1 && MasterCardAndDeckStateObject[key].owner == null){
@@ -199,7 +200,6 @@ function start(route, handle)
 					{
 						if(cards[i].indexOf(".jpg") == cards[i].length - 4 || cards[i].indexOf(".png") == cards[i].length - 4 || cards[i].indexOf(".bmp") == cards[i].length - 4){
 							CardsNoDirectories.push(ReplacePathFowardSlash + "/" + cards[i])
-							//cards[i] = ReplacePathFowardSlash + "/" + cards[i]
 						}
 					}
 					cards = shuffle(cards)
@@ -207,14 +207,12 @@ function start(route, handle)
 					MasterCardAndDeckStateObject[ObjectID] = new DeckOrCardObject()
 					MasterCardAndDeckStateObject[ObjectID].cardarray = CardsNoDirectories
 					MasterCardAndDeckStateObject[ObjectID].deck = 1
-					MasterCardAndDeckStateObject[ObjectID].x = "0px"
-					MasterCardAndDeckStateObject[ObjectID].y = "200px"
+					MasterCardAndDeckStateObject[ObjectID].x = data.x
+					MasterCardAndDeckStateObject[ObjectID].y = data.y
 					MasterCardAndDeckStateObject[ObjectID].cmdwindowname = cmdwindowdeckname
 					console.log(MasterCardAndDeckStateObject)
-					sio.sockets.in("mainwindows").emit("CreateObject", {"ObjectID":ObjectID, "ObjectSrc":data.deck, "x":"0px", "y":"200px", "type":"deck"})
+					sio.sockets.in("mainwindows").emit("CreateObject", {"ObjectID":ObjectID, "ObjectSrc":data.deck, "x":data.x, "y":data.y, "type":"deck"})
 					sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":CommandWindowConnectionObject[address.address].user + " - New-->Deck  Name=" + cmdwindowdeckname + ", ID=" + ObjectID, "type":"function"})
-					//sio.sockets.emit("CreateObject", {"ObjectID":ObjectID, "ObjectSrc":data.deck, "x":"0px", "y":"200px", "type":"deck"})
-					//GameWindowConnectionObject[address.address].emit("CreateObject", {"ObjectID":ObjectID, "ObjectSrc":data.deck, "x":"0px", "y":"200px", "type":"deck"})
 				})
 				break
 
@@ -236,12 +234,12 @@ function start(route, handle)
 
 					MasterCardAndDeckStateObject[ObjectID] = new DeckOrCardObject()
 					MasterCardAndDeckStateObject[ObjectID].deck = 0
-					MasterCardAndDeckStateObject[ObjectID].x = "0px"
-					MasterCardAndDeckStateObject[ObjectID].y = "0px"
+					MasterCardAndDeckStateObject[ObjectID].x = data.x
+					MasterCardAndDeckStateObject[ObjectID].y = data.y
 					MasterCardAndDeckStateObject[ObjectID].cmdwindowname = cmdwindowdeckname
 
 					console.log("This hit the new card case!")
-					sio.sockets.in("mainwindows").emit("CreateObject", {"ObjectSrc":ReplacePathFowardSlash, "ObjectID":ObjectID, "x":MasterCardAndDeckStateObject[ObjectID].x, "y":MasterCardAndDeckStateObject[ObjectID].y})
+					sio.sockets.in("mainwindows").emit("CreateObject", {"ObjectSrc":ReplacePathFowardSlash, "ObjectID":ObjectID, "x":data.x, "y":data.y})
 					sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":CommandWindowConnectionObject[address.address].user + " - New-->Card  Name=" + cmdwindowdeckname + ", ID=" + ObjectID, "type":"function"})
 
 				break
@@ -265,20 +263,18 @@ function start(route, handle)
 
 					MasterCardAndDeckStateObject[ObjectID] = new DeckOrCardObject()
 					MasterCardAndDeckStateObject[ObjectID].deck = 0
-					MasterCardAndDeckStateObject[ObjectID].x = (Number((CDObject.x).replace("px", "")) + 360) + "px"
-					MasterCardAndDeckStateObject[ObjectID].y = Number((CDObject.y).replace("px", "")) + "px"
+					MasterCardAndDeckStateObject[ObjectID].x = data.x
+					MasterCardAndDeckStateObject[ObjectID].y = data.y
 					MasterCardAndDeckStateObject[ObjectID].cmdwindowname = cmdwindowdeckname
 
-					//sio.sockets.emit("CreateObject", {"ObjectSrc":CDObject.cardarray[0], "ObjectID":ObjectID, "x":MasterCardAndDeckStateObject[ObjectID].x, "y":MasterCardAndDeckStateObject[ObjectID].y, "type":"card"})
 					if(data.facedown != "1"){
-						sio.sockets.in("mainwindows").emit("CreateObject", {"ObjectSrc":CDObject.cardarray[0], "ObjectID":ObjectID, "x":MasterCardAndDeckStateObject[ObjectID].x, "y":MasterCardAndDeckStateObject[ObjectID].y, "quantity":MasterCardAndDeckStateObject[ObjectID].quantity})
+						sio.sockets.in("mainwindows").emit("CreateObject", {"ObjectSrc":CDObject.cardarray[0], "ObjectID":ObjectID, "x":data.x, "y":data.y, "quantity":MasterCardAndDeckStateObject[ObjectID].quantity})
 						sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":CommandWindowConnectionObject[address.address].user + " - Deck-->Board  Name="+CDObject.cmdwindowname+", ID=" + GameWindowConnectionObject[address.address].BoundDeckObject + " --> Name=" + cmdwindowdeckname + ", ID=" + ObjectID, "type":"function"})
 					}else{
 						MasterCardAndDeckStateObject[ObjectID].facedown = 1
-						sio.sockets.in("mainwindows").emit("CreateObject", {"ObjectSrc":CDObject.cardarray[0], "ObjectID":ObjectID, "x":MasterCardAndDeckStateObject[ObjectID].x, "y":MasterCardAndDeckStateObject[ObjectID].y, "quantity":MasterCardAndDeckStateObject[ObjectID].quantity, "facedown":"1"})
+						sio.sockets.in("mainwindows").emit("CreateObject", {"ObjectSrc":CDObject.cardarray[0], "ObjectID":ObjectID, "x":data.x, "y":data.y, "quantity":MasterCardAndDeckStateObject[ObjectID].quantity, "facedown":"1"})
 						sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":CommandWindowConnectionObject[address.address].user + " - Deck-->Board(Facedown)", "type":"function"})
 					}
-					//GameWindowConnectionObject[address.address].emit("CreateObject", {"ObjectSrc":CDObject.cardarray[0], "ObjectID":ObjectID, "x":MasterCardAndDeckStateObject[ObjectID].x, "y":MasterCardAndDeckStateObject[ObjectID].y, "type":"card"})
 					MasterCardAndDeckStateObject[ObjectID].cardarray = CDObject.cardarray.splice(0,1)
 				}
 				break
@@ -400,14 +396,14 @@ function start(route, handle)
 		if(MasterCardAndDeckStateObject[data.ObjectID].facedown == 1){
 			console.log("Flip card up!")
 			sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":CommandWindowConnectionObject[address.address].user + " - Flipped card up. Name=" + name + ", ID=" + data.ObjectID, "type":"function"})
-			sio.sockets.in("mainwindows").emit("FlipCardUp", {"ObjectID":data.ObjectID})
+			sio.sockets.in("mainwindows").emit("FlipCardUp", {"ObjectID":data.ObjectID, "x":data.x, "y":data.y})
 			MasterCardAndDeckStateObject[data.ObjectID].facedown = 0
 			return
 		}
 
 		if(MasterCardAndDeckStateObject[data.ObjectID].facedown == 0 || MasterCardAndDeckStateObject[data.ObjectID].facedown == null){
 			console.log("Flip card down!")
-			sio.sockets.in("mainwindows").emit("FlipCardDown", {"ObjectID":data.ObjectID})
+			sio.sockets.in("mainwindows").emit("FlipCardDown", {"ObjectID":data.ObjectID, "x":data.x, "y":data.y})
 			sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":CommandWindowConnectionObject[address.address].user + " - Flipped card down. Name=" + name + ", ID=" + data.ObjectID, "type":"function"})
 			MasterCardAndDeckStateObject[data.ObjectID].facedown = 1
 			return
@@ -440,7 +436,9 @@ function start(route, handle)
 		delete MasterCardAndDeckStateObject[data.ObjectID]
 		IDReaperArray.push(data.ObjectID)
 		console.log(MasterCardAndDeckStateObject)
-		sio.sockets.emit("DeleteObject", {"ObjectID":data.ObjectID})
+		if(data.fromhand != 1){
+			sio.sockets.emit("DeleteObject", {"ObjectID":data.ObjectID})
+		}
 	})
 
 	socket.on("CurrentBoundDeckObject", function(data)

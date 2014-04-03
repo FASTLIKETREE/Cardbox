@@ -78,19 +78,18 @@ function DCobject(){
 
 	this.render = function(namestring, x, y, ID, quantity, facedown)
 	{
+		console.log("THIS IS FACE DOWN " + facedown)
+		this.imgsrc = namestring
 		if(this.isdeck == 0 && facedown != 1){
 			console.log("This is in the face up card section, is it not working?")
-			this.imgsrc = namestring
 			imageobject.src = namestring
 		}
 
 		if(this.isdeck == 0 && facedown == 1){
-			this.imgsrc = namestring
 			imageobject.src = "pictures/AnotherGroupOfCards/Deck.png"
 		}
 
 		if(this.isdeck == 1){
-			this.imgsrc = "pictures/AnotherGroupOfCards/Deck.png"
 			imageobject.src = "pictures/AnotherGroupOfCards/Deck.png"
 		}
 
@@ -111,60 +110,31 @@ function DCobject(){
 				quantity = ""
 			}
 
-
-
-
-			counterdiv = document.createElement("div");
-			counterdiv.style.zIndex = 6
-			this.counterdiv = counterdiv
-			counterdiv.style.position="absolute"
-			counterdiv.style.left = x
-			counterdiv.style.top = (Number(y.replace("px", "") - 30 )) + "px"
-			var CounterDivText = document.createTextNode(quantity.toString())
-			counterdiv.appendChild(CounterDivText)
-			document.body.appendChild(counterdiv);
-
-			iddiv = document.createElement("div");
-			iddiv.style.zIndex = 6
-			this.iddiv = iddiv
-			iddiv.style.position="absolute"
-			iddiv.style.left = x
-			console.log("This is the image iD that we are appending? -> " + ID)
-			iddiv.style.top = (Number(y.replace("px", "") - 15 )) + "px"
-			var IDDivText = document.createTextNode("ID:" + ID)
-			iddiv.appendChild(IDDivText)
-			document.body.appendChild(iddiv);
-		}
-		/*
-			imageobject.style.position="absolute"
-			imageobject.style.left = x
-			imageobject.style.top = y
-			imageobject.setAttribute("class", "drag")
-			imageobject.addEventListener("mouseenter", mouseenter, false)
-			imageobject.addEventListener("mouseleave", mouseleave, false)
-			document.body.appendChild(imageobject)
-
-			console.log("This is the quantity ->" + quantity)
-			if(quantity == null){
-				quantity = ""
+			if(counterdiv == null){
+				counterdiv = document.createElement("div");
+				counterdiv.style.zIndex = 6
+				this.counterdiv = counterdiv
+				counterdiv.style.position="absolute"
+				counterdiv.style.left = x
+				counterdiv.style.top = (Number(y.replace("px", "") - 30 )) + "px"
+				var CounterDivText = document.createTextNode(quantity.toString())
+				counterdiv.appendChild(CounterDivText)
+				document.body.appendChild(counterdiv);
 			}
-			counterdiv = document.createElement("div");
-			counterdiv.style.position="absolute"
-			counterdiv.style.left = x
-			counterdiv.style.top = (Number(y.replace("px", "") - 30 )) + "px"
-			var CounterDivText = document.createTextNode(quantity.toString())
-			counterdiv.appendChild(CounterDivText)
-			document.body.appendChild(counterdiv);
 
-			iddiv = document.createElement("div");
-			iddiv.style.position="absolute"
-			iddiv.style.left = x
-			console.log("This is the image iD that we are appending? -> " + ID)
-			iddiv.style.top = (Number(y.replace("px", "") - 15 )) + "px"
-			var IDDivText = document.createTextNode("ID:" + ID)
-			iddiv.appendChild(IDDivText)
-			document.body.appendChild(iddiv);
-		*/
+			if(iddiv == null){
+				iddiv = document.createElement("div");
+				iddiv.style.zIndex = 6
+				this.iddiv = iddiv
+				iddiv.style.position="absolute"
+				iddiv.style.left = x
+				console.log("This is the image iD that we are appending? -> " + ID)
+				iddiv.style.top = (Number(y.replace("px", "") - 15 )) + "px"
+				var IDDivText = document.createTextNode("ID:" + ID)
+				iddiv.appendChild(IDDivText)
+				document.body.appendChild(iddiv);
+			}
+		}
 	}
 
 	this.setposition = function(posx, posy)
@@ -205,18 +175,15 @@ function DCobject(){
 		}
 	}
 
-	this.flipup = function()
-	{
-		imageobject.src = this.imgsrc
+	this.flipup = function(){
+		this.render(this.imgsrc, imageobject.style.left, imageobject.style.top, this.id, this.quantity, 0)
 	}
 
-	this.flipdown = function()
-	{
-		imageobject.src = "pictures/AnotherGroupOfCards/Deck.png"
+	this.flipdown = function(){
+		this.render(this.imgsrc, imageobject.style.left, imageobject.style.top, this.id, this.quantity, 1)
 	}
 
-	this.shuffle = function()
-	{
+	this.shuffle = function(){
 		socket.emit("ShuffleDeck", {"DeckID":this.id})
 	}
 }
@@ -245,34 +212,7 @@ $(document).ready(function(){
 					socket.emit("DeleteObject", {"ObjectID":ActiveObject.id})
 				}
 				break
-			case 107: //Keycode 107 = Right hand +
-				if(ActiveObject != 0 && !e.altKey && !e.shiftKey){
-					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"1"})
-				}
-				if(ActiveObject != 0 && !e.altKey && e.shiftKey){
-					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"5"})
-				}
-				if(ActiveObject != 0 && e.altKey && !e.shiftKey){
-					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"20"})
-				}
-				if(ActiveObject != 0 && e.altKey && e.shiftKey){
-					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"100"})
-				}
-				break
-			case 109: //Keycode 109 = Right hand -
-				if(ActiveObject != 0 && !e.altKey && !e.shiftKey){
-					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-1"})
-				}
-				if(ActiveObject != 0 && !e.altKey && e.shiftKey){
-					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-5"})
-				}
-				if(ActiveObject != 0 && e.altKey && !e.shiftKey){
-					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-20"})
-				}
-				if(ActiveObject != 0 && e.altKey && e.shiftKey){
-					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-100"})
-				}
-				break
+
 
 			case 46: //Keycode 46 = Delete Key (Delete deck)
 				if(BoundDeckObject != 0){
@@ -304,13 +244,15 @@ $(document).ready(function(){
 			case 68: //Keycode 68 = D (draw card from bound deck to board)
 				if(BoundDeckObject != 0){
 					console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
-					socket.emit("CreateObject", {"type":"drawboard"})
+					x = (Number(BoundDeckObject.img.style.left.replace("px", "")) + BoundDeckObject.img.width + 5) + "px"
+					socket.emit("CreateObject", {"type":"drawboard", "x":x, "y":BoundDeckObject.img.style.top})
 				}
 				break
 			case 70: //Keycode 70 = F (Flip a card over)
 				if(ActiveObject.isdeck == 0){
-					console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
-					socket.emit("FlipCard", {"ObjectID":ActiveObject.id})
+					console.log(ActiveObject.img.style.left + "<-- left")
+					console.log(ActiveObject.img.style.top + "<-- top")
+					socket.emit("FlipCard", {"ObjectID":ActiveObject.id, "x":ActiveObject.img.style.left, "y":ActiveObject.img.style.top})
 				}
 				break
 			case 71: //Keycode 71 = G (Grab the active card object and put it into your hand)
@@ -384,6 +326,35 @@ $(document).ready(function(){
 					console.log(Number(ActiveObject.img.style.zIndex) + "<--- This is the new Z order, it can't go below 0")
 				}
 				break
+
+			case 107: //Keycode 107 = Right hand +
+				if(ActiveObject != 0 && !e.altKey && !e.shiftKey){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"1"})
+				}
+				if(ActiveObject != 0 && !e.altKey && e.shiftKey){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"5"})
+				}
+				if(ActiveObject != 0 && e.altKey && !e.shiftKey){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"20"})
+				}
+				if(ActiveObject != 0 && e.altKey && e.shiftKey){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"100"})
+				}
+				break
+			case 109: //Keycode 109 = Right hand -
+				if(ActiveObject != 0 && !e.altKey && !e.shiftKey){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-1"})
+				}
+				if(ActiveObject != 0 && !e.altKey && e.shiftKey){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-5"})
+				}
+				if(ActiveObject != 0 && e.altKey && !e.shiftKey){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-20"})
+				}
+				if(ActiveObject != 0 && e.altKey && e.shiftKey){
+					socket.emit("UpdateCounterDiv", {"ObjectID":ActiveObject.id, "Quantity":"-100"})
+				}
+				break
 		}
 	})
 
@@ -394,9 +365,11 @@ $(document).ready(function(){
 		console.log(data.x + "<-- this is the card x")
 		console.log(data.y + "<-- this is the card y")
 		console.log(data.quantity + "<-- this is thequantity")
+		console.log(data.facedown + "<-- this is facedown")
 
 		ActiveObject = new DCobject()
 		ActiveObject.id = data.ObjectID
+		ActiveObject.facedown = data.facedown
 		ActiveObject.quantity = data.quantity
 
 		if(data.type == "deck"){
