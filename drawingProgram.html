@@ -29,6 +29,7 @@ function DCobject(){
 	this.quantity = null
 	this.imgwidth = null
 	this.imgheight = null
+	this.graveyardimg = null
 	this.counterdiv = null
 	this.iddiv = null
 
@@ -167,12 +168,7 @@ function DCobject(){
 		counterdiv.parentNode.removeChild(counterdiv)
 		iddiv.parentNode.removeChild(iddiv)
 		ActiveObject = 0
-		console.log("Does this get here and remove the shit?")
-		if(this.isdeck == 1){
-		console.log("Does this get here and remove the shit? in the isdeck thing?")
-			socket.emit("DeleteDeck", {"DeckID":this.id})
-			BoundDeckObject = 0
-		}
+
 	}
 
 	this.flipup = function(){
@@ -208,9 +204,15 @@ $(document).ready(function(){
 
 			case 8: //Keycode 8 = backspace key (Delete card (not deck))
 				e.preventDefault()
-				if(ActiveObject != 0 && ActiveObject.isdeck == 0){
+				if(ActiveObject != 0 && ActiveObject.isdeck == 0 && BoundDeckObject == 0){
 					socket.emit("DeleteObject", {"ObjectID":ActiveObject.id})
 				}
+				if(ActiveObject != 0 && ActiveObject.isdeck == 0 && BoundDeckObject != 0){
+					BoundDeckObject.graveyardimg = ActiveObject.img
+					x = (Number(BoundDeckObject.img.style.left.replace("px", "")) - ActiveObject.img.width - 5) + "px"
+					socket.emit("MoveObject", {"ObjectID":ActiveObject.id, "x":x, "y":BoundDeckObject.img.style.top})
+				}
+
 				break
 
 
@@ -422,6 +424,12 @@ $(document).ready(function(){
 		console.log(data.ObjectID)
 		console.log(data)
 		DecksAndCards[data.ObjectID].delete()
+	})
+
+	socket.on("MoveObject", function(data){
+		console.log(data.ObjectID)
+		console.log(data)
+		DecksAndCards[data.ObjectID].setposition(data.x, data.y)
 	})
 
 	socket.on("RoomCounters", function(data){

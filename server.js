@@ -460,6 +460,12 @@ function start(route, handle)
 		console.log(MasterCardAndDeckStateObject)
 	})
 
+	socket.on("MoveObject", function(data){
+		io.sockets.in("commandwindows").emit("MoveObject", {"ObjectID":data.ObjectID, "x":data.x, "y":data.y})
+		io.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":CommandWindowConnectionObject[address.address].user + " - Deleted an object. Name=" + name + ", ID=" + data.ObjectID, "type":"function"})
+
+	}
+
 	socket.on("login", function(data){
 		console.log("This has hit the login with ->" + data.name)
 
