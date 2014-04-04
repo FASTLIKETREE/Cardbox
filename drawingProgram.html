@@ -71,14 +71,20 @@ function DCobject(){
 		imageobject.addEventListener("mouseenter", mouseenterbound, false)
 	}
 
+	this.clearMouseListeners = function(){
+		imageobject.removeEventListener("mouseenter", mouseenter)
+		imageobject.removeEventListener("mouseleave", mouseleave)
+	}
+
 	this.addMouseListeners = function(){
 		imageobject.addEventListener("mouseenter", mouseenter, false)
 		imageobject.addEventListener("mouseleave", mouseleave, false)
 		imageobject.removeEventListener("mouseleave", mouseenterbound)
 	}
 
-	this.render = function(namestring, x, y, ID, quantity, facedown)
+	this.render = function(namestring, x, y, ID, quantity, facedown, GraveYardSrc)
 	{
+		console.log("This is graveyardSrc ->" +GraveYardSrc)
 		console.log("THIS IS FACE DOWN " + facedown)
 		this.imgsrc = namestring
 		if(this.isdeck == 0 && facedown != 1){
@@ -134,6 +140,22 @@ function DCobject(){
 				var IDDivText = document.createTextNode("ID:" + ID)
 				iddiv.appendChild(IDDivText)
 				document.body.appendChild(iddiv);
+				if(typeof GraveYardSrc !== "undefined"){
+					console.log("This should hit the non undefined graveyard section")
+					console.log("This should be the graveyard image on load --|" + GraveYardSrc)
+					var localgraveyardimg = new Image();
+					localgraveyardimg.src = GraveYardSrc
+					self.graveyardimg = localgraveyardimg
+					localgraveyardimg.onload = function()
+					{
+						console.log("This should be the graveyard image on load --|" + GraveYardSrc)
+						localgraveyardimg.style.position = "absolute"
+						localgraveyardimg.style.left = (Number(imageobject.style.left.replace("px", "") - localgraveyardimg.width )) + "px"
+						localgraveyardimg.style.top = imageobject.style.top
+						document.body.appendChild(localgraveyardimg);
+					}
+				}
+
 			}
 		}
 	}
@@ -142,11 +164,21 @@ function DCobject(){
 	{
 		imageobject.style.left = posx
 		imageobject.style.top = posy
-		console.log(counterdiv.innerHTML + "<-- this is the inner html of the counter div thing when dragging!")
 		counterdiv.style.left = posx
 		counterdiv.style.top = (Number(posy.replace("px", "") - 30 )) + "px"
 		iddiv.style.left = posx
 		iddiv.style.top = (Number(posy.replace("px", "") - 15 )) + "px"
+		if(ActiveObject.graveyardimg != null){
+			console.log("Do we get in here?")
+			ActiveObject.graveyardimg.style.left = (Number(posx.replace("px", "") - this.graveyardimg.width )) + "px"
+			ActiveObject.graveyardimg.style.top = posy
+			/*
+			counterdiv.style.left = (Number(posx.replace("px", "") - BoundDeckObject.graveyardimg.width )) + "px"
+			counterdiv.style.top = (Number(posy.replace("px", "") - 30 )) + "px"
+			iddiv.style.left = (Number(posx.replace("px", "") - BoundDeckObject.graveyardimg.width )) + "px"
+			iddiv.style.top = (Number(posy.replace("px", "") - 15 )) + "px"
+			*/
+		}
 	}
 
 	this.updatecounterdiv = function(Quantity)
@@ -161,14 +193,21 @@ function DCobject(){
 		this.quantity = CurrentValue
 	}
 
-	this.delete = function()
+	this.delete = function(Flag)
 	{
+		if(Flag == "tograveyard"){
+			delete DecksAndCards[this.id]
+			counterdiv.parentNode.removeChild(counterdiv)
+			iddiv.parentNode.removeChild(iddiv)
+			ActiveObject = 0
+			return
+		}
+
 		delete DecksAndCards[this.id]
 		imageobject.parentNode.removeChild(imageobject)
 		counterdiv.parentNode.removeChild(counterdiv)
 		iddiv.parentNode.removeChild(iddiv)
 		ActiveObject = 0
-
 	}
 
 	this.flipup = function(){
@@ -208,13 +247,11 @@ $(document).ready(function(){
 					socket.emit("DeleteObject", {"ObjectID":ActiveObject.id})
 				}
 				if(ActiveObject != 0 && ActiveObject.isdeck == 0 && BoundDeckObject != 0){
-					BoundDeckObject.graveyardimg = ActiveObject.img
+
 					x = (Number(BoundDeckObject.img.style.left.replace("px", "")) - ActiveObject.img.width - 5) + "px"
-					socket.emit("MoveObject", {"ObjectID":ActiveObject.id, "x":x, "y":BoundDeckObject.img.style.top})
+					socket.emit("SendGraveyard", {"ObjectID":ActiveObject.id, "ObjectSrc":ActiveObject.imgsrc, "origin":"board", "x":x, "y":BoundDeckObject.img.style.top})
 				}
-
 				break
-
 
 			case 46: //Keycode 46 = Delete Key (Delete deck)
 				if(BoundDeckObject != 0){
@@ -244,11 +281,18 @@ $(document).ready(function(){
 				}
 				break
 			case 68: //Keycode 68 = D (draw card from bound deck to board)
-				if(BoundDeckObject != 0){
+				if(BoundDeckObject != 0 && !e.shiftKey){
 					console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
 					x = (Number(BoundDeckObject.img.style.left.replace("px", "")) + BoundDeckObject.img.width + 5) + "px"
 					socket.emit("CreateObject", {"type":"drawboard", "x":x, "y":BoundDeckObject.img.style.top})
 				}
+
+				if(BoundDeckObject != 0 && e.shiftKey){
+					console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
+					x = (Number(BoundDeckObject.img.style.left.replace("px", "")) + BoundDeckObject.img.width + 5) + "px"
+					socket.emit("CreateObject", {"type":"drawboardgraveyard", "x":x, "y":BoundDeckObject.img.style.top})
+				}
+
 				break
 			case 70: //Keycode 70 = F (Flip a card over)
 				if(ActiveObject.isdeck == 0){
@@ -266,9 +310,13 @@ $(document).ready(function(){
 				}
 				break
 			case 72: //Keycode 72 = H (draw a card from bound deck to hand)
-				if(BoundDeckObject != 0){
+				if(BoundDeckObject != 0 && !e.shiftKey){
 					console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
 					socket.emit("CreateObject", {"ObjectID":BoundDeckObject.id, "type":"drawhand"})
+				}
+				if(BoundDeckObject != 0 && e.shiftKey){
+					console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
+					socket.emit("CreateObject", {"ObjectID":BoundDeckObject.id, "type":"drawhandgraveyard"})
 				}
 				break
 			case 77: //Keycode 77 = M (Put card on bottoM of bound deck)
@@ -294,8 +342,11 @@ $(document).ready(function(){
 				break
 
 			case 83: //Keycode 83 = S (shuffle bound deck)
-				if(BoundDeckObject != 0){
+				if(BoundDeckObject != 0 && !e.shiftKey){
 					socket.emit("ShuffleDeck", {"ObjectID":BoundDeckObject.id})
+				}
+				if(BoundDeckObject != 0 && e.shiftKey){
+					socket.emit("ShuffleGraveyardIntoDeck", {"ObjectID":BoundDeckObject.id})
 				}
 				break
 			case 84: //Keycode 84 = T (add ActiveObject to top of deck)
@@ -368,28 +419,38 @@ $(document).ready(function(){
 		console.log(data.y + "<-- this is the card y")
 		console.log(data.quantity + "<-- this is thequantity")
 		console.log(data.facedown + "<-- this is facedown")
+		console.log(data.GraveyardSrc + "<-- this is facedown")
 
+		/*
 		ActiveObject = new DCobject()
 		ActiveObject.id = data.ObjectID
 		ActiveObject.facedown = data.facedown
 		ActiveObject.quantity = data.quantity
+		*/
+		DecksAndCards[data.ObjectID] = new DCobject()
+		DecksAndCards[data.ObjectID].id = data.ObjectID
+		DecksAndCards[data.ObjectID].facedown = data.facedown
+		DecksAndCards[data.ObjectID].quantity = data.quantity
 
 		if(data.type == "deck"){
-			ActiveObject.isdeck = 1
+			DecksAndCards[data.ObjectID].isdeck = 1
+			//ActiveObject.isdeck = 1
 		}
 		else{
-			ActiveObject.isdeck = 0
+			DecksAndCards[data.ObjectID].isdeck = 0
+			//ActiveObject.isdeck = 0
 		}
 
-		DecksAndCards[data.ObjectID] = ActiveObject
-		ActiveObject.render(data.ObjectSrc, data.x, data.y, data.ObjectID, data.quantity, data.facedown)
+		//DecksAndCards[data.ObjectID] = ActiveObject
+		//ActiveObject.render(data.ObjectSrc, data.x, data.y, data.ObjectID, data.quantity, data.facedown, data.GraveyardSrc)
+		DecksAndCards[data.ObjectID].render(data.ObjectSrc, data.x, data.y, data.ObjectID, data.quantity, data.facedown, data.GraveyardSrc)
 	})
 
 	socket.on("PositionDeck", function(data){
 
-		console.log(data.DeckID + "<-- WWHHHHHHHHHHHHHHATTTTTTTTTTTT???")
-		console.log(data.x)
-		console.log(data.y)
+		//console.log(data.DeckID + "<-- WWHHHHHHHHHHHHHHATTTTTTTTTTTT???")
+		//console.log(data.x)
+		//console.log(data.y)
 		DecksAndCards[data.DeckID].setposition(data.x, data.y)
 	})
 
@@ -423,13 +484,73 @@ $(document).ready(function(){
 	socket.on("DeleteObject", function(data){
 		console.log(data.ObjectID)
 		console.log(data)
+		if(DecksAndCards[data.ObjectID].graveyardimg != null){
+			DecksAndCards[data.ObjectID].graveyardimg.parentNode.removeChild(DecksAndCards[data.ObjectID].graveyardimg)
+		}
 		DecksAndCards[data.ObjectID].delete()
 	})
 
-	socket.on("MoveObject", function(data){
+	socket.on("UpdateGraveyard", function(data){
+	console.log(data.TargetDeck + "<-- this is data target deck")
+		if(data.nextcard == "none"){
+			DecksAndCards[data.TargetDeck].graveyardimg.parentNode.removeChild(DecksAndCards[data.TargetDeck].graveyardimg)
+			DecksAndCards[data.TargetDeck].graveyardimg = null
+		}else{
+			DecksAndCards[data.TargetDeck].graveyardimg.src = data.ObjectSrc
+			DecksAndCards[data.TargetDeck].graveyardimg.onload = function()
+			{
+				DecksAndCards[data.TargetDeck].graveyardimg.style.position="absolute"
+				var x = (Number(DecksAndCards[data.TargetDeck].img.style.left.replace("px", "")) - DecksAndCards[data.TargetDeck].graveyardimg.width - 5) + "px"
+				var y = DecksAndCards[data.TargetDeck].img.style.top
+				DecksAndCards[data.TargetDeck].graveyardimg.style.left = x
+				DecksAndCards[data.TargetDeck].graveyardimg.style.top = y
+				DecksAndCards[data.TargetDeck].removeMouseListeners()
+				DecksAndCards[data.TargetDeck].graveyardimg.setAttribute("class", "nodrag")
+			}
+		}
+	})
+
+	socket.on("SendGraveyard", function(data){
 		console.log(data.ObjectID)
-		console.log(data)
+		console.log(data + "<-- this is all of the data")
+		console.log(data.TargetDeck + "<-- this is the target deck")
+		if(DecksAndCards[data.TargetDeck].graveyardimg != null){
+			DecksAndCards[data.TargetDeck].graveyardimg.parentNode.removeChild(DecksAndCards[data.TargetDeck].graveyardimg)
+		}
+		DecksAndCards[data.TargetDeck].graveyardimg = DecksAndCards[data.ObjectID].img
 		DecksAndCards[data.ObjectID].setposition(data.x, data.y)
+		DecksAndCards[data.ObjectID].img.setAttribute("class", "nodrag")
+		DecksAndCards[data.ObjectID].setborder("")
+		DecksAndCards[data.ObjectID].clearMouseListeners()
+		DecksAndCards[data.ObjectID].delete("tograveyard")
+
+	})
+
+	socket.on("SendGraveyardHand", function(data){
+		console.log(data.ObjectSrc + "<-- this is the object source")
+		console.log(data.TargetDeck + "<-- this is the target deck")
+		if(DecksAndCards[data.TargetDeck].graveyardimg != null){
+			DecksAndCards[data.TargetDeck].graveyardimg.parentNode.removeChild(DecksAndCards[data.TargetDeck].graveyardimg)
+		}
+		var imageobjectlocal = new Image();
+		imageobjectlocal.src = data.ObjectSrc
+
+		//var localimageobject  = new image()
+		//localimageobject = data.ObjectSrc
+		imageobjectlocal.onload = function(){
+			console.log("This has entered the onload function!")
+			DecksAndCards[data.TargetDeck].graveyardimg = imageobjectlocal
+			var x = (Number(DecksAndCards[data.TargetDeck].img.style.left.replace("px", "")) - data.width - 5) + "px"
+			var y = DecksAndCards[data.TargetDeck].img.style.top
+
+			imageobjectlocal.style.position="absolute"
+			imageobjectlocal.style.left = x
+			imageobjectlocal.style.top = y
+			imageobjectlocal.setAttribute("class", "nodrag")
+			//imageobject.addEventListener("mouseenter", mouseenter, false)
+			//imageobject.addEventListener("mouseleave", mouseleave, false)
+			document.body.appendChild(imageobjectlocal)
+		}
 	})
 
 	socket.on("RoomCounters", function(data){
@@ -479,9 +600,9 @@ if (isNaN(parseInt(this.targetobj.style.top))){this.targetobj.style.top=0}
 
 //This sets the left and top of the image, where it is loaded on the page
 this.offsetx=parseInt(this.targetobj.style.left)
-console.log(this.offsetx + "<-- this is the offset x")
+//console.log(this.offsetx + "<-- this is the offset x")
 this.offsety=parseInt(this.targetobj.style.top)
-console.log(this.offsety + "<-- this is the offset y")
+//console.log(this.offsety + "<-- this is the offset y")
 
 
 //The event object which is passed automatically to a function when bound to an event, like onmousedown
@@ -515,10 +636,10 @@ LastMovedID = ActiveObject.id
 
 if (this.countemit == 10)
 {
-	console.log(ActiveObject.id + "<-- this is the longDesc, and should be the ID of the deck object")
+	//console.log(ActiveObject.id + "<-- this is the longDesc, and should be the ID of the deck object")
 	this.countemit = 0
 	if(ActiveObject != 0){
-	console.log("Never get to here or what?")
+	console.log("This is the DECKID of the position:" + ActiveObject.id)
 	socket.emit("PositionDeck", {"DeckID": ActiveObject.id, "x":this.offsetx+evtobj.clientX-this.x+"px", "y":this.targetobj.style.top=this.offsety+evtobj.clientY-this.y+"px"})}
 }
 

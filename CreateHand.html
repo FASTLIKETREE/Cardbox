@@ -22,10 +22,13 @@ function cardobject(){
 	this.id = null
 	this.imgsrc = null
 	this.quantity = null
+	this.imageobject = null
+
 	var self = this
 	var counterdiv = null
 	var iddiv = null
 	var imageobject = new Image();
+	this.imageobject = imageobject
 
 	var mouseenter = {
 		handleEvent: function(){
@@ -121,8 +124,31 @@ function cardobject(){
 		if(ActiveObject != 0){
 			switch(e.keyCode){
 				case 8: //Keycode 8 = backspace key (Delete card (not deck))
+					socket.emit("SendGraveyard", {"ObjectID":ActiveObject.id, "ObjectSrc":ActiveObject.imgsrc, "origin":"hand", "width":ActiveObject.imageobject.width})
 					ActiveObject.delete()
-					//socket.emit("DeleteObject", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id})
+					break
+
+				case 65: //Keycode 65 = A (Add to deck and shuffle)
+					//socket.emit("AddDeckActiveCardAndShuffle", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id})
+					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "fromhand":1, "Key":"a"})
+					ActiveObject.delete()
+					break
+				case 66: // Keycode 66 = B (send card to Board)
+					console.log(ActiveObject.quantity + "<-- this is the activeobject quantity")
+					socket.emit("CreateObject", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "quantity":ActiveObject.quantity, "type":"handtoboard"})
+					ActiveObject.delete()
+					break
+				case 70: //Keycode 70 = F (Flip a card over and send to board)
+					socket.emit("CreateObject", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "quantity":ActiveObject.quantity, "type":"handtoboardfacedown"})
+					ActiveObject.delete()
+					break
+				case 77: //Keycode 77 = M (Put card on bottoM of bound deck)
+					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "fromhand":1, "Key":"m"})
+					ActiveObject.delete()
+					break
+				case 84: //Keycode 84 = T (add ActiveObject to top of deck)
+					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "fromhand":1, "Key":"t"})
+					ActiveObject.delete()
 					break
 				case 107: //Keycode 107 = Right hand + (Add 20)
 					if(ActiveObject != 0 && !e.altKey && !e.shiftKey){
@@ -151,28 +177,6 @@ function cardobject(){
 					if(ActiveObject != 0 && e.altKey && e.shiftKey){
 						socket.emit("UpdateCounterDivHand", {"ObjectID":ActiveObject.id, "Quantity":"-100"})
 					}
-					break
-				case 65: //Keycode 65 = A (Add to deck and shuffle)
-					//socket.emit("AddDeckActiveCardAndShuffle", {"CardSrc":ActiveObject.imgsrc, "CardID":ActiveObject.id})
-					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "fromhand":1, "Key":"a"})
-					ActiveObject.delete()
-					break
-				case 66: // Keycode 66 = B (send card to Board)
-					console.log(ActiveObject.quantity + "<-- this is the activeobject quantity")
-					socket.emit("CreateObject", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "quantity":ActiveObject.quantity, "type":"handtoboard"})
-					ActiveObject.delete()
-					break
-				case 70: //Keycode 70 = F (Flip a card over and send to board)
-					socket.emit("CreateObject", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "quantity":ActiveObject.quantity, "type":"handtoboardfacedown"})
-					ActiveObject.delete()
-					break
-				case 77: //Keycode 77 = M (Put card on bottoM of bound deck)
-					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "fromhand":1, "Key":"m"})
-					ActiveObject.delete()
-					break
-				case 84: //Keycode 84 = T (add ActiveObject to top of deck)
-					socket.emit("AddToDeck", {"ObjectSrc":ActiveObject.imgsrc, "ObjectID":ActiveObject.id, "fromhand":1, "Key":"t"})
-					ActiveObject.delete()
 					break
 			}
 		}

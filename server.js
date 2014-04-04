@@ -112,13 +112,20 @@ function start(route, handle)
 		console.log("Main Window has been created");
 		for(var key in MasterCardAndDeckStateObject)
 		{
+			console.log("THIS SHOULD FIRE TWICE?!")
 			if(MasterCardAndDeckStateObject[key].deck == 0 && MasterCardAndDeckStateObject[key].owner == null){
 				//socket.emit("CreateObject", {"ObjectSrc":MasterCardAndDeckStateObject[key].cardarray[0], "ObjectID":key, "x":MasterCardAndDeckStateObject[key].x, "y":MasterCardAndDeckStateObject[key].y, "type":"card"})
 				console.log("SERVER FACE DOWN OF THE CARD? " + MasterCardAndDeckStateObject[key].facedown)
 				socket.emit("CreateObject", {"ObjectSrc":MasterCardAndDeckStateObject[key].cardarray[0], "ObjectID":key, "x":MasterCardAndDeckStateObject[key].x, "y":MasterCardAndDeckStateObject[key].y, "facedown":MasterCardAndDeckStateObject[key].facedown})
 			}
 
-			if(MasterCardAndDeckStateObject[key].deck == 1 && MasterCardAndDeckStateObject[key].owner == null){
+			if(MasterCardAndDeckStateObject[key].deck == 1 && MasterCardAndDeckStateObject[key].owner == null && MasterCardAndDeckStateObject[key].graveyardarray.length >= 1){
+				console.log("This is getting to the graveyard length greater than one?")
+				console.log(MasterCardAndDeckStateObject[key].graveyardarray[0])
+				socket.emit("CreateObject", {"ObjectSrc":"null", "ObjectID":key, "x":MasterCardAndDeckStateObject[key].x, "y":MasterCardAndDeckStateObject[key].y, "facedown":MasterCardAndDeckStateObject[key].facedown, "type":"deck", "GraveyardSrc":MasterCardAndDeckStateObject[key].graveyardarray[0]})
+			}
+
+			if(MasterCardAndDeckStateObject[key].deck == 1 && MasterCardAndDeckStateObject[key].owner == null && MasterCardAndDeckStateObject[key].graveyardarray.length < 1){
 				socket.emit("CreateObject", {"ObjectSrc":"null", "ObjectID":key, "x":MasterCardAndDeckStateObject[key].x, "y":MasterCardAndDeckStateObject[key].y, "type":"deck"})
 			}
 		}
@@ -202,7 +209,7 @@ function start(route, handle)
 							CardsNoDirectories.push(ReplacePathFowardSlash + "/" + cards[i])
 						}
 					}
-					cards = shuffle(cards)
+					CardsNoDirectories = shuffle(CardsNoDirectories)
 
 					MasterCardAndDeckStateObject[ObjectID] = new DeckOrCardObject()
 					MasterCardAndDeckStateObject[ObjectID].cardarray = CardsNoDirectories
@@ -248,7 +255,6 @@ function start(route, handle)
 				console.log(CDObject + "<-- this is the CDObject")
 				console.log(CDObject + "<-- this is the CDObject")
 				if(CDObject.cardarray.length > 0){
-
 					var ObjectID = null
 					if(IDReaperArray.length > 0){
 						console.log(IDReaperArray + "<-- thisi s the id reaper array")
@@ -278,6 +284,42 @@ function start(route, handle)
 					MasterCardAndDeckStateObject[ObjectID].cardarray = CDObject.cardarray.splice(0,1)
 				}
 				break
+
+			case "drawboardgraveyard":
+				var CDObject = MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject]
+				console.log(CDObject + "<-- this is the CDObject")
+				console.log(CDObject + "<-- this is the CDObject")
+				if(CDObject.graveyardarray.length > 0){
+					var ObjectID = null
+					if(IDReaperArray.length > 0){
+						console.log(IDReaperArray + "<-- thisi s the id reaper array")
+						ObjectID = IDReaperArray.splice(0,1)}
+					else{
+						ObjectID = UniqueIDCounter
+						UniqueIDCounter = UniqueIDCounter + 1
+					}
+
+					var cmdwindowdecksplit = (CDObject.graveyardarray[0]).split("\/")
+					var cmdwindowdeckname = cmdwindowdecksplit[cmdwindowdecksplit.length - 1]
+
+					MasterCardAndDeckStateObject[ObjectID] = new DeckOrCardObject()
+					MasterCardAndDeckStateObject[ObjectID].deck = 0
+					MasterCardAndDeckStateObject[ObjectID].x = data.x
+					MasterCardAndDeckStateObject[ObjectID].y = data.y
+					MasterCardAndDeckStateObject[ObjectID].cmdwindowname = cmdwindowdeckname
+					console.log(GameWindowConnectionObject[address.address].BoundDeckObject + "<--- how is this not a number, isn't this the bound deck object?")
+					sio.sockets.in("mainwindows").emit("CreateObject", {"ObjectSrc":CDObject.graveyardarray[0], "ObjectID":ObjectID, "x":data.x, "y":data.y})
+					if(CDObject.graveyardarray.length == 1){
+						sio.sockets.in("mainwindows").emit("UpdateGraveyard", {"ObjectSrc":CDObject.graveyardarray[0], "TargetDeck":GameWindowConnectionObject[address.address].BoundDeckObject, "nextcard":"none"})
+					}else{
+						sio.sockets.in("mainwindows").emit("UpdateGraveyard", {"ObjectSrc":CDObject.graveyardarray[1], "TargetDeck":GameWindowConnectionObject[address.address].BoundDeckObject})
+					}
+					sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":CommandWindowConnectionObject[address.address].user + " - Graveyard-->Board  Name="+CDObject.cmdwindowname+", ID=" + GameWindowConnectionObject[address.address].BoundDeckObject + " --> Name=" + cmdwindowdeckname + ", ID=" + ObjectID, "type":"function"})
+					MasterCardAndDeckStateObject[ObjectID].graveyardarray = CDObject.graveyardarray.splice(0,1)
+				}
+				break
+
+
 			case "drawhand":
 				var CDObject = MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject]
 				console.log(CDObject + "<-- this is the CDObject")
@@ -308,6 +350,42 @@ function start(route, handle)
 					MasterCardAndDeckStateObject[ObjectID].owner = address.address
 				}
 				break
+
+			case "drawhandgraveyard":
+				var CDObject = MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject]
+				console.log(CDObject + "<-- this is the CDObject")
+				console.log(CDObject + "<-- this is the CDObject")
+				if(CDObject.graveyardarray.length > 0){
+					var ObjectID = null
+					if(IDReaperArray.length > 0){
+						console.log(IDReaperArray + "<-- thisi s the id reaper array")
+						ObjectID = IDReaperArray.splice(0,1)}
+					else{
+						ObjectID = UniqueIDCounter
+						UniqueIDCounter = UniqueIDCounter + 1
+					}
+
+					var cmdwindowdecksplit = (CDObject.graveyardarray[0]).split("\/")
+					var cmdwindowdeckname = cmdwindowdecksplit[cmdwindowdecksplit.length - 1]
+
+					MasterCardAndDeckStateObject[ObjectID] = new DeckOrCardObject()
+					MasterCardAndDeckStateObject[ObjectID].deck = 0
+					MasterCardAndDeckStateObject[ObjectID].x = data.x
+					MasterCardAndDeckStateObject[ObjectID].y = data.y
+					MasterCardAndDeckStateObject[ObjectID].cmdwindowname = cmdwindowdeckname
+					console.log(GameWindowConnectionObject[address.address].BoundDeckObject + "<--- how is this not a number, isn't this the bound deck object?")
+					HandWindowConnectionObject[address.address].emit("CreateObject", {"ObjectSrc":CDObject.graveyardarray[0], "ObjectID":ObjectID, "x":data.x, "y":data.y})
+
+					if(CDObject.graveyardarray.length == 1){
+						sio.sockets.in("mainwindows").emit("UpdateGraveyard", {"ObjectSrc":CDObject.graveyardarray[0], "TargetDeck":GameWindowConnectionObject[address.address].BoundDeckObject, "nextcard":"none"})
+					}else{
+						sio.sockets.in("mainwindows").emit("UpdateGraveyard", {"ObjectSrc":CDObject.graveyardarray[1], "TargetDeck":GameWindowConnectionObject[address.address].BoundDeckObject})
+					}
+					sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":CommandWindowConnectionObject[address.address].user + " - Graveyard-->Board  Name="+CDObject.cmdwindowname+", ID=" + GameWindowConnectionObject[address.address].BoundDeckObject + " --> Name=" + cmdwindowdeckname + ", ID=" + ObjectID, "type":"function"})
+					MasterCardAndDeckStateObject[ObjectID].graveyardarray = CDObject.graveyardarray.splice(0,1)
+				}
+				break
+
 			case "boardtohand":
 				sio.sockets.in("mainwindows").emit("DeleteObject", {"ObjectSrc":data.ObjectSrc, "ObjectID":data.ObjectID})
 				console.log(data.quantity + "<-- this is the quantity!")
@@ -389,6 +467,19 @@ function start(route, handle)
 		console.log(MasterCardAndDeckStateObject)
 	})
 
+	socket.on("ShuffleGraveyardIntoDeck", function(data){
+		console.log("Shuffling deck with deck ID =" + GameWindowConnectionObject[address.address].BoundDeckObject)
+		console.log(MasterCardAndDeckStateObject)
+		console.log("\n")
+		var name = MasterCardAndDeckStateObject[data.ObjectID].cmdwindowname
+		sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":CommandWindowConnectionObject[address.address].user + " - Shuffled graveyard into deck. Name=" + name + ", ID=" + data.ObjectID, "type":"function"})
+		MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].cardarray = MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].cardarray.concat(MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].graveyardarray)
+		MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].graveyardarray = []
+		MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].cardarray = shuffle(MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].cardarray)
+		sio.sockets.in("mainwindows").emit("UpdateGraveyard", {"TargetDeck":GameWindowConnectionObject[address.address].BoundDeckObject, "nextcard":"none"})
+		console.log(MasterCardAndDeckStateObject)
+	})
+
 	socket.on("FlipCard", function(data){
 		console.log("Flip card called")
 		console.log(MasterCardAndDeckStateObject[data.ObjectID].facedown + "<--this fuck is this face down flag?!? called")
@@ -460,11 +551,31 @@ function start(route, handle)
 		console.log(MasterCardAndDeckStateObject)
 	})
 
-	socket.on("MoveObject", function(data){
-		io.sockets.in("commandwindows").emit("MoveObject", {"ObjectID":data.ObjectID, "x":data.x, "y":data.y})
-		io.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":CommandWindowConnectionObject[address.address].user + " - Deleted an object. Name=" + name + ", ID=" + data.ObjectID, "type":"function"})
-
-	}
+	socket.on("SendGraveyard", function(data){
+		console.log("THIS HASD HIT THE SEND GRAVEYARD< WHAT IS THE OIRGON! " + data.origin)
+		var name = MasterCardAndDeckStateObject[data.ObjectID].cmdwindowname
+		var targetname = MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].cmdwindowname
+		if(data.origin == "board"){
+			MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].graveyardarray.unshift(data.ObjectSrc)
+			sio.sockets.in("mainwindows").emit("SendGraveyard", {"ObjectID":data.ObjectID, "x":data.x, "y":data.y, TargetDeck:GameWindowConnectionObject[address.address].BoundDeckObject})
+			sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":CommandWindowConnectionObject[address.address].user + " - Send object to graveyard. Name=" + name + ", ID=" + data.ObjectID, "type":"function"})
+			delete MasterCardAndDeckStateObject[data.ObjectID]
+			IDReaperArray.push(data.ObjectID)
+		}
+		if(data.origin == "hand"){
+			console.log(GameWindowConnectionObject[address.address].BoundDeckObject + "<-- this is the bound deck object from the incoming address...")
+			if(GameWindowConnectionObject[address.address].BoundDeckObject >= 1){
+				MasterCardAndDeckStateObject[GameWindowConnectionObject[address.address].BoundDeckObject].graveyardarray.unshift(data.ObjectSrc)
+				console.log(data.ObjectID)
+				console.log(data.ObjectSrc)
+				console.log(data.width)
+				sio.sockets.in("mainwindows").emit("SendGraveyardHand", {"ObjectID":data.ObjectID, "width":data.width, "ObjectSrc":data.ObjectSrc, TargetDeck:GameWindowConnectionObject[address.address].BoundDeckObject})
+				sio.sockets.in("commandwindows").emit("CommandWindowUpdate", {"UpdateString":CommandWindowConnectionObject[address.address].user + " - Send object to graveyard. Name=" + name + ", ID=" + data.ObjectID, "type":"function"})
+				delete MasterCardAndDeckStateObject[data.ObjectID]
+				IDReaperArray.push(data.ObjectID)
+			}
+		}
+	})
 
 	socket.on("login", function(data){
 		console.log("This has hit the login with ->" + data.name)
