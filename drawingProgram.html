@@ -168,10 +168,10 @@ function DCobject(){
 		counterdiv.style.top = (Number(posy.replace("px", "") - 30 )) + "px"
 		iddiv.style.left = posx
 		iddiv.style.top = (Number(posy.replace("px", "") - 15 )) + "px"
-		if(ActiveObject.graveyardimg != null){
+		if(this.graveyardimg != null){
 			console.log("Do we get in here?")
-			ActiveObject.graveyardimg.style.left = (Number(posx.replace("px", "") - this.graveyardimg.width )) + "px"
-			ActiveObject.graveyardimg.style.top = posy
+			this.graveyardimg.style.left = (Number(posx.replace("px", "") - this.graveyardimg.width )) + "px"
+			this.graveyardimg.style.top = posy
 			/*
 			counterdiv.style.left = (Number(posx.replace("px", "") - BoundDeckObject.graveyardimg.width )) + "px"
 			counterdiv.style.top = (Number(posy.replace("px", "") - 30 )) + "px"
@@ -514,6 +514,10 @@ $(document).ready(function(){
 		console.log(data.ObjectID)
 		console.log(data + "<-- this is all of the data")
 		console.log(data.TargetDeck + "<-- this is the target deck")
+		console.log(data.ObjectID + "<-- this is the data.ObjectID")
+		console.log(DecksAndCards[data.TargetDeck])
+		console.log(DecksAndCards[data.ObjectID])
+
 		if(DecksAndCards[data.TargetDeck].graveyardimg != null){
 			DecksAndCards[data.TargetDeck].graveyardimg.parentNode.removeChild(DecksAndCards[data.TargetDeck].graveyardimg)
 		}
