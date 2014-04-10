@@ -217,6 +217,9 @@ $(document).ready(function(){
 						case "\/clear":
 							socket.emit("Clear")
 							break
+						case "\/help":
+							PrintHelpText()
+							break
 						case "\/login":
 							//socket.emit("login", {"name":SwitchedCommandLineInput[1], "oldname":CurrentUser})
 							socket.emit("login", {"name":SwitchedCommandLineInput[1]})
@@ -428,6 +431,70 @@ function ResizeWindow()
 	cmdwndcontainer.style.width = $(window).width() - 100;
 	cmdwndcontainer.style.height = $(window).height() - 100;
 
+	ScrollToEndOfChatBox()
+}
+
+function PrintHelpText()
+{
+var HTMLText = "\n\
+Game Interface\n\
+The game interface is composed of three parts: the game window, the hand window and the command window.\n\
+If you do not see these three windows turn off the popup blocker and reload the webpage.\n\
+\n\
+The game window\n\
+The game window is the common area for all players. This is the analogous to a table top. Actions in the game window are visible to all players.\n\
+\n\
+The Hand window\n\
+This window is unique to each player, if you take cards into your hand they cannot be seen by other players.\n\
+\n\
+The Command window\n\
+This window is a chat box and a command interpreter. This window takes commands in the form of \“/command\”.\n\
+It also has a directory structure of the cards and decks available to create; directories can be navigated with dir, cd, cd.., cd\.\n\
+\n\
+Game Window commands\n\
+Make sure the game window has focus and is receiving keyboard input. When you mouse over a card it will have a blue border and becomes the \“Active card\”.\n\
+Backspace: Sends the active card to the graveyard of the bound deck, if a deck is not bound the card is deleted.\n\
+A: Shuffle the active card into the bound deck, this action shuffles the bound deck.\n\
+B: Binds a deck \– this is a critical feature, all deck operations rely on a deck being bound. To bind a deck mouse over a deck (created with /new in the command window) and hit B.\n\
+D: Draw a card to the game window from the bound deck.\n\
+F: Flip the active card face down, hitting F again on a face down card will turn it face up.\n\
+G: Grab the active card and put it into your hand, this is how you move cards from the game window to your hand window.\n\
+H: Draw a card to your hand window from the bound deck.\n\
+M: Sends the active card to the bottom of the bound deck.\n\
+O: Reset the Z order of all fixed cards, this will allow them to be draggable again, used in conjunction with the P key.\n\
+P: Fixes a card to the game window, this sets the Z order of the active card to -1 which puts it in the background and prevents the card from being dragged, used in conjunction with the O key.\n\
+S: Shuffles the bound deck.\n\
+T: Sends the active card to the top of the bound deck.\n\
+W: Draw a card from the bound deck to the game window facedown.\n\
+X: Increase Z order of the active card by 1, Z order of all new cards start at 5.\n\
+Z: Decrease Z order of the active card by 1, Z order won\’t go below 0 with this key.\n\
++: (Keypad) Increases the counter of the active card by 1. (Use with shift +5, Alt +20, Shift&Alt +100)\n\
+-: (Keypad) Decreases the counter of the active card by 1. (Use with shift -5, Alt -20, Shift&Alt -100)\n\
+\n\
+Hand Window commands\n\
+A: Shuffle the active card into the bound deck, this action shuffles the bound deck.\n\
+B: Sends the active card to the board.\n\
+F: Sends the active card to the board facedown.\n\
+M: Sends the active card to the bottom of the bound deck.\n\
+T: Sends the active card to the top of the bound deck.\n\
++: (Keypad) Increases the counter of the active card by 1. (Use with shift +5, Alt +20, Shift&Alt +100)\n\
+-: (Keypad) Decreases the counter of the active card by 1. (Use with shift -5, Alt -20, Shift&Alt -100)\n\
+\n\
+Command Window commands\n\
+dir: Just like DOS dir command, shows directories and files.\n\
+cd: Change directory, use tab to autocomplete. (Same as DOS command, but doesn\’t support back directory navigation in the path)\n\
+cd..: Go one directory up (Same as DOS command)\n\
+cd\\: Go to the root directory (Same as DOS command)\n\
+\n\
+/new\n\
+/one\n\
+/roll\n\
+/login\n\
+/logout\n\
+"
+
+	HTMLText = HTMLText.replace(/\r?\n/g, '<br />');
+	cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
 	ScrollToEndOfChatBox()
 }
 

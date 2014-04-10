@@ -19,6 +19,7 @@
 	var BoundDeckObject = 0
 	var ActiveObject = 0
 	var DecksAndCards = {}
+	var SwapObject = 0
 
 function DCobject(){
 	var self = this
@@ -118,10 +119,11 @@ function DCobject(){
 			}
 
 			if(counterdiv == null){
+				console.log("This has gotten int othe counter div place, this hsould make a counter div shouldn't it?")
 				counterdiv = document.createElement("div");
-				counterdiv.style.zIndex = 6
-				this.counterdiv = counterdiv
-				counterdiv.style.position="absolute"
+				counterdiv.style.zIndex = 6;
+				self.counterdiv = counterdiv;
+				counterdiv.style.position="absolute";
 				counterdiv.style.left = x
 				counterdiv.style.top = (Number(y.replace("px", "") - 30 )) + "px"
 				var CounterDivText = document.createTextNode(quantity.toString())
@@ -132,7 +134,7 @@ function DCobject(){
 			if(iddiv == null){
 				iddiv = document.createElement("div");
 				iddiv.style.zIndex = 6
-				this.iddiv = iddiv
+				self.iddiv = iddiv
 				iddiv.style.position="absolute"
 				iddiv.style.left = x
 				console.log("This is the image iD that we are appending? -> " + ID)
@@ -155,7 +157,6 @@ function DCobject(){
 						document.body.appendChild(localgraveyardimg);
 					}
 				}
-
 			}
 		}
 	}
@@ -247,7 +248,6 @@ $(document).ready(function(){
 					socket.emit("DeleteObject", {"ObjectID":ActiveObject.id})
 				}
 				if(ActiveObject != 0 && ActiveObject.isdeck == 0 && BoundDeckObject != 0){
-
 					x = (Number(BoundDeckObject.img.style.left.replace("px", "")) - ActiveObject.img.width - 5) + "px"
 					socket.emit("SendGraveyard", {"ObjectID":ActiveObject.id, "ObjectSrc":ActiveObject.imgsrc, "origin":"board", "x":x, "y":BoundDeckObject.img.style.top})
 				}
@@ -280,6 +280,20 @@ $(document).ready(function(){
 					socket.emit("CurrentBoundDeckObject", {"DeckID":BoundDeckObject.id})
 				}
 				break
+
+			case 67: //Keycode 67 = C (Copy deck or card object)
+				console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
+				var x = Math.floor((Number(ActiveObject.img.style.left.replace("px", "")) + (BoundDeckObject.img.width * .25))) + "px"
+				var y = ActiveObject.img.style.top
+				if(ActiveObject.isdeck == 1){
+					socket.emit("CreateObject", {'deck':ActiveObject.imgsrc, "type":"newdeck", "x":x, "y":y})
+				}
+				if(ActiveObject.isdeck == 0){
+					console.log(ActiveObject.src + "<-- this is the active object source")
+					socket.emit("CreateObject", {'src':ActiveObject.imgsrc, "type":"newcard", "x":x, "y":y})
+				}
+				break
+
 			case 68: //Keycode 68 = D (draw card from bound deck to board)
 				if(BoundDeckObject != 0 && !e.shiftKey){
 					console.log(BoundDeckObject.id + "<-- this is the bound deck object ID!!!!!")
@@ -325,7 +339,7 @@ $(document).ready(function(){
 				}
 				break
 
-			case 79: //Keycode 79 = O (Put card on bottoM of bound deck)
+			case 79: //Keycode 79 = O (Unstick Fixed cards)
 				if(ActiveObject != 0){
 					for(var key in DecksAndCards){
 						if(DecksAndCards[key].img.style.zIndex == -1){
@@ -335,7 +349,7 @@ $(document).ready(function(){
 				}
 				break
 
-			case 80: //Keycode 80 = P (Permanently fix card to location)
+			case 80: //Keycode 80 = P (Fix card to location)
 				if(ActiveObject != 0){
 					ActiveObject.img.style.zIndex = -1
 				}
@@ -360,23 +374,33 @@ $(document).ready(function(){
 				}
 				break
 
-			case 88: //Keycode 88 = x (Increase Z order of active object)
+			case 88: //Keycode 88 = X (Increase Z order of active object)
 				if(ActiveObject != 0){
-					ActiveObject.img.style.zIndex = Number(ActiveObject.img.style.zIndex) + 1
-					ActiveObject.counterdiv.style.zIndex = Number(ActiveObject.counterdiv.style.zIndex) + 1
-					ActiveObject.iddiv.style.zIndex = Number(ActiveObject.iddiv.style.zIndex) + 1
-					console.log(Number(ActiveObject.img.style.zIndex) + "<--- This is the new Z order")
+					if(SwapObject == 0){
+						SwapObject = ActiveObject
+					}
+				}
+				if(ActiveObject != 0){
+					if(SwapObject != 0){
+						SwapObject = ActiveObject
+					}
 				}
 				break
 
 			case 90: //Keycode 90 = Z (Decrease Z order of active object)
-				if(ActiveObject != 0){
+				if(ActiveObject != 0 && !e.shiftKey){
 					if(Number(ActiveObject.img.style.zIndex) > 0){
+						console.log(ActiveObject.img.style.zIndex + "<_- this is the z order of teh shit, what is goign wrong")
 						ActiveObject.img.style.zIndex = Number(ActiveObject.img.style.zIndex) - 1
-						ActiveObject.counterdiv.style.zIndex = Number(ActiveObject.counterdiv.style.zIndex) + 1
-						ActiveObject.iddiv.style.zIndex = Number(ActiveObject.iddiv.style.zIndex) + 1
+						ActiveObject.counterdiv.style.zIndex = Number(ActiveObject.counterdiv.style.zIndex) - 1
+						ActiveObject.iddiv.style.zIndex = Number(ActiveObject.iddiv.style.zIndex) - 1
 					}
-					console.log(Number(ActiveObject.img.style.zIndex) + "<--- This is the new Z order, it can't go below 0")
+					//console.log(Number(ActiveObject.img.style.zIndex) + "<--- This is the new Z order, it can't go below 0")
+				}
+				if(ActiveObject != 0 && e.shiftKey){
+					ActiveObject.img.style.zIndex = Number(ActiveObject.img.style.zIndex) + 1
+					ActiveObject.counterdiv.style.zIndex = Number(ActiveObject.counterdiv.style.zIndex) + 1
+					ActiveObject.iddiv.style.zIndex = Number(ActiveObject.iddiv.style.zIndex) + 1
 				}
 				break
 
