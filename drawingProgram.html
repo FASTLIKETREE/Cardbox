@@ -244,11 +244,14 @@ $(document).ready(function(){
 
 			case 8: //Keycode 8 = backspace key (Delete card (not deck))
 				e.preventDefault()
+				//If there are performance issues with cards being relocated or deleted they should be done so on the client first and then notify the server, this will help improve the user experience.
 				if(ActiveObject != 0 && ActiveObject.isdeck == 0 && BoundDeckObject == 0){
+					ActiveObject.delete()
 					socket.emit("DeleteObject", {"ObjectID":ActiveObject.id})
 				}
 				if(ActiveObject != 0 && ActiveObject.isdeck == 0 && BoundDeckObject != 0){
 					x = (Number(BoundDeckObject.img.style.left.replace("px", "")) - ActiveObject.img.width - 5) + "px"
+					ActiveObject.img.style.left = x
 					socket.emit("SendGraveyard", {"ObjectID":ActiveObject.id, "ObjectSrc":ActiveObject.imgsrc, "origin":"board", "x":x, "y":BoundDeckObject.img.style.top})
 				}
 				break
@@ -378,11 +381,28 @@ $(document).ready(function(){
 				if(ActiveObject != 0){
 					if(SwapObject == 0){
 						SwapObject = ActiveObject
+						SwapObject.img.style.opacity=.5
+						break
 					}
 				}
 				if(ActiveObject != 0){
-					if(SwapObject != 0){
-						SwapObject = ActiveObject
+					if(SwapObject != 0 && SwapObject != ActiveObject){
+						var TempLocXSwap = SwapObject.img.style.left
+						var TemplLocYSwap = SwapObject.img.style.top
+						var TempLocXActive = ActiveObject.img.style.left
+						var TemplLocYActive = ActiveObject.img.style.top
+
+						SwapObject.setposition(TempLocXActive, TemplLocYActive)
+						ActiveObject.setposition(TempLocXSwap, TemplLocYSwap)
+						socket.emit("PositionDeck", {"DeckID": SwapObject.id, "x":TempLocXActive, "y":TemplLocYActive})
+						socket.emit("PositionDeck", {"DeckID": ActiveObject.id, "x":TempLocXSwap, "y":TemplLocYSwap})
+						SwapObject.img.style.opacity=1
+						SwapObject = 0
+						break
+					}
+					if(SwapObject != 0 && SwapObject == ActiveObject){
+						SwapObject.img.style.opacity=1
+						SwapObject = 0
 					}
 				}
 				break
@@ -584,7 +604,6 @@ $(document).ready(function(){
 	socket.on("RoomCounters", function(data){
 		console.log(data)
 	})
-
 })
 
 /***********************************************
@@ -610,6 +629,7 @@ document.onmouseup=function()
 	this.dragapproved=0
 	if(ActiveObject != 0){
 	socket.emit("PositionDeck", {"DeckID": LastMovedID, "x":FinalX, "y":FinalY})}
+	LastMovedID = null
 }
 },
 drag:function(e){
@@ -632,10 +652,8 @@ this.offsetx=parseInt(this.targetobj.style.left)
 this.offsety=parseInt(this.targetobj.style.top)
 //console.log(this.offsety + "<-- this is the offset y")
 
-
-//The event object which is passed automatically to a function when bound to an event, like onmousedown
-// has x and y coordinantes of e.clientX and e.clientY, in this case e is evtobj which is a selection between the window.event, and the automatically passed variable, this is
-//a difference between IE and other browsers
+//The event object is passed automatically to a function when bound to an event, like onmousedown
+// has x and y coordinantes of e.clientX and e.clientY, in this case e is evtobj which is a selection between the window.event, and the automatically passed variable, this is a difference between IE and other browsers
 
 this.x=evtobj.clientX
 console.log(this.x + "<-- this is the clientx")
