@@ -56,6 +56,9 @@
 <script>
 
 $(document).ready(function(){
+	CommandReplayArray = []
+	CommandCounter = 0
+
 	var RootReplaceKey = "C:\\AANode\\pictures"
 
 	var rooms = 9
@@ -67,12 +70,15 @@ $(document).ready(function(){
 	socket.emit("GetDirectoryStructure")
 
 	cmdwnd = document.getElementById("commandwindow");
+	//cmdline = document.getElementById("commandline");
+
 	var commandwindowdirectorydiv = document.getElementById("currentdirectory");
 	commandwindowdirectorydiv.innerHTML = "root"
 
 	document.addEventListener("keydown", function(e)
 	{
-		//console.log(e.keyCode + "<-- this is the keycode")
+		console.log(e.keyCode + "<-- this is the keycode")
+		var cmdline = document.getElementById("commandline");
 		switch(e.keyCode)
 		{
 			case 13:
@@ -81,10 +87,12 @@ $(document).ready(function(){
 
 			}
 			else{
+				AddCommandToArray(cmdline.value)
 				e.preventDefault()
 				console.log("This should send the mail, this will send to all the people i guess?")
+				CommandCounter = 0
+				//var cmdline = document.getElementById("commandline");
 
-				var cmdline = document.getElementById("commandline");
 				if(cmdline.value != ""){
 					var SwitchedCommandLineInput = cmdline.value.split(" ")
 					switch(SwitchedCommandLineInput[0]){
@@ -113,7 +121,6 @@ $(document).ready(function(){
 								}
 								HTMLText = HTMLText + FileText
 							}
-
 
 							cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
 							ScrollToEndOfChatBox()
@@ -183,36 +190,36 @@ $(document).ready(function(){
 							//socket.emit
 							break
 						case "\/view":
-								var NewWindow = window.open("", "ViewDirectory", "height=200,width=200")
-								NewWindow.document.write("<html><head><title></title></head><body></body>");
+							var NewWindow = window.open("", "ViewDirectory", "height=200,width=200")
+							NewWindow.document.write("<html><head><title></title></head><body></body>");
 
-								var CardsAndDeckArray = (LocalDirectoryStructureObject[CurrentDirectory]).split(";")
-								if(CardsAndDeckArray[1].length > 0){
-									var CardsOnly = CardsAndDeckArray[1]
-									var CardsOnlySplit = CardsOnly.split(",")
-									var ReplacePathFowardSlash = CurrentDirectory.replace(/\\/g, "/")
-									ReplacePathFowardSlash  = ReplacePathFowardSlash.replace("C:/AANode/", "")
-									for(var k = 1; k < CardsOnlySplit.length; ++k){
-										var containerdiv = document.createElement("div");
-										var namestringdiv = document.createElement("div");
-										var imageobjectdiv = document.createElement("div");
-										var ViewDivText = document.createTextNode(String.fromCharCode(13) + String.fromCharCode(13)+ String.fromCharCode(13) + CardsOnlySplit[k])
-										namestringdiv.appendChild(ViewDivText)
-										//imagedividerdiv.setAttribute("style", "width:500px,height:300px")
+							var CardsAndDeckArray = (LocalDirectoryStructureObject[CurrentDirectory]).split(";")
+							if(CardsAndDeckArray[1].length > 0){
+								var CardsOnly = CardsAndDeckArray[1]
+								var CardsOnlySplit = CardsOnly.split(",")
+								var ReplacePathFowardSlash = CurrentDirectory.replace(/\\/g, "/")
+								ReplacePathFowardSlash  = ReplacePathFowardSlash.replace("C:/AANode/", "")
+								for(var k = 1; k < CardsOnlySplit.length; ++k){
+									var containerdiv = document.createElement("div");
+									var namestringdiv = document.createElement("div");
+									var imageobjectdiv = document.createElement("div");
+									var ViewDivText = document.createTextNode(String.fromCharCode(13) + String.fromCharCode(13)+ String.fromCharCode(13) + CardsOnlySplit[k])
+									namestringdiv.appendChild(ViewDivText)
+									//imagedividerdiv.setAttribute("style", "width:500px,height:300px")
 
-										var image = new Image();
-										console.log(ReplacePathFowardSlash + "/" + CardsOnlySplit[k] + "<-- this is the image source")
-										image.src = ReplacePathFowardSlash + "/" + CardsOnlySplit[k];
-										imageobjectdiv.appendChild(image)
-										if(k != 1){
-											containerdiv.appendChild(document.createElement("br"));
-											containerdiv.appendChild(document.createElement("br"));
-										}
-										containerdiv.appendChild(namestringdiv)
-										containerdiv.appendChild(imageobjectdiv)
-										NewWindow.document.body.appendChild(containerdiv)
+									var image = new Image();
+									console.log(ReplacePathFowardSlash + "/" + CardsOnlySplit[k] + "<-- this is the image source")
+									image.src = ReplacePathFowardSlash + "/" + CardsOnlySplit[k];
+									imageobjectdiv.appendChild(image)
+									if(k != 1){
+										containerdiv.appendChild(document.createElement("br"));
+										containerdiv.appendChild(document.createElement("br"));
 									}
+									containerdiv.appendChild(namestringdiv)
+									containerdiv.appendChild(imageobjectdiv)
+									NewWindow.document.body.appendChild(containerdiv)
 								}
+							}
 							break
 						case "\/clear":
 							socket.emit("Clear")
@@ -240,6 +247,7 @@ $(document).ready(function(){
 				cmdline.value = ""
 			}
 			break
+			// This is tab for auto-complete, what a pain in the ass
 			case 9:
 				e.preventDefault()
 				//if(e.shiftKey){
@@ -342,11 +350,30 @@ $(document).ready(function(){
 								console.log(LocalFilesAndDirs)
 							}
 						}
-
 					}
 				}
-				break
+			break
 
+			case 38:
+				e.preventDefault()
+				if(CommandReplayArray.length > 0){
+					if(CommandCounter < CommandReplayArray.length){
+						CommandCounter = CommandCounter + 1
+					}
+					cmdline.value = CommandReplayArray[CommandReplayArray.length - CommandCounter]
+				}
+				console.log(CommandCounter)
+			break
+			case 40:
+				e.preventDefault()
+				if(CommandReplayArray.length > 0){
+					if(CommandCounter > 1){
+						CommandCounter = CommandCounter - 1
+					}
+					cmdline.value = CommandReplayArray[CommandReplayArray.length - CommandCounter]
+				}
+				console.log(CommandCounter)
+			break
 		}
 
 	})
@@ -393,25 +420,33 @@ function ScrollToEndOfChatBox(){
 	cmdwndcontainer.scrollTop = scrollHeight - cmdwndcontainer.clientHeight;
 }
 
+function AddCommandToArray(Command)
+{
+	if(CommandReplayArray.length > 30){
+		CommandReplayArray.splice(0,1)
+		CommandReplayArray.push(Command)
+	}else{
+		if(CommandReplayArray[CommandReplayArray.length-1] != Command){
+			CommandReplayArray.push(Command)
+		}
+	}
+}
 
 function ResizeWindow()
 {
-	""
-	//alert("This has resized")
-	console.log("The fuck is going on here?");
 	console.log($(window).height() + "<-- this is the window height");
 	console.log($(window).width() + "<-- this is the window width");
-	cmdwnd.style.width = $(window).width() - 100;
+	cmdwnd.style.width = $(window).width() - 15;
 	cmdwnd.style.height = $(window).height() - 100;
 
 	var cmdline = document.getElementById("commandline");
-	cmdline.style.width = $(window).width() - 100;
+	cmdline.style.width = $(window).width() - 15;
 
 	var directorydiv = document.getElementById("currentdirectory");
-	directorydiv.style.width = $(window).width() - 100;
+	directorydiv.style.width = $(window).width() - 15;
 
 	var cmdwndcontainer = document.getElementById("commandwindowcontainer");
-	cmdwndcontainer.style.width = $(window).width() - 100;
+	cmdwndcontainer.style.width = $(window).width() - 15;
 	cmdwndcontainer.style.height = $(window).height() - 100;
 
 	ScrollToEndOfChatBox()
@@ -434,46 +469,46 @@ The Command window\n\
 This window is a chat box and a command interpreter. This window takes commands in the form of "/command".\n\
 It also has a directory structure of the cards and decks available to create; directories can be navigated with dir, cd, cd.., cd\.\n\
 \n\
-Game Window commands\n\
-Make sure the game window has focus and is receiving keyboard input. When you mouse over a card it will have a blue border and becomes the \"Active card\".\n\
-Backspace: Sends the active card to the graveyard of the bound deck, if a deck is not bound the card is deleted.\n\
-A: Shuffle the active card into the bound deck, this action shuffles the bound deck.\n\
-B: Binds a deck \- this is a critical feature, all deck operations rely on a deck being bound. To bind a deck mouse over a deck (created with /new in the command window) and hit B.\n\
-D: Draw a card to the game window from the bound deck.\n\
-F: Flip the active card face down, hitting F again on a face down card will turn it face up.\n\
-G: Grab the active card and put it into your hand, this is how you move cards from the game window to your hand window.\n\
-H: Draw a card to your hand window from the bound deck.\n\
-M: Sends the active card to the bottom of the bound deck.\n\
-O: Reset the Z order of all fixed cards, this will allow them to be draggable again, used in conjunction with the P key.\n\
-P: Fixes a card to the game window, this sets the Z order of the active card to -1 which puts it in the background and prevents the card from being dragged, used in conjunction with the O key.\n\
-S: Shuffles the bound deck.\n\
-T: Sends the active card to the top of the bound deck.\n\
-W: Draw a card from the bound deck to the game window facedown.\n\
-X: Increase Z order of the active card by 1, Z order of all new cards start at 5.\n\
-Z: Decrease Z order of the active card by 1, Z order won\'t go below 0 with this key.\n\
-+: (Keypad) Increases the counter of the active card by 1. (Use with shift +5, Alt +20, Shift&Alt +100)\n\
--: (Keypad) Decreases the counter of the active card by 1. (Use with shift -5, Alt -20, Shift&Alt -100)\n\
-\n\
-Hand Window commands\n\
-A: Shuffle the active card into the bound deck, this action shuffles the bound deck.\n\
-B: Sends the active card to the board.\n\
-F: Sends the active card to the board facedown.\n\
-M: Sends the active card to the bottom of the bound deck.\n\
-T: Sends the active card to the top of the bound deck.\n\
-+: (Keypad) Increases the counter of the active card by 1. (Use with shift +5, Alt +20, Shift&Alt +100)\n\
--: (Keypad) Decreases the counter of the active card by 1. (Use with shift -5, Alt -20, Shift&Alt -100)\n\
-\n\
 Command Window commands\n\
 dir: Just like DOS dir command, shows directories and files.\n\
 cd: Change directory, use tab to autocomplete. (Same as DOS command, but doesn\'t support back directory navigation in the path)\n\
 cd..: Go one directory up (Same as DOS command)\n\
 cd\\: Go to the root directory (Same as DOS command)\n\
 /new: This creates a deck of one of each card in the current directory\n\
-/one + name: This creates a single card, use tab to auto\-complete the possibilities\n\
-/roll + number: Get a random number, you can get multiple numbers by typing 3x6 (Think of this like 3d6)\n\
+/one + name: This creates a single card, use tab to auto\-complete.\n\
+/roll + number: Get a random number, you can get multiple numbers by typing <numdice>x<dicevalue>: 3x6, 10x20, 5x100\n\
 /login + name: Login with a name, this will identify a user in the chat window when an event happens.\n\
+\n\
+Game Window commands\n\
+Make sure the game window has focus and is receiving keyboard input. When you mouse over a card it will have a blue border and becomes the \"Active card\".\n\
+Backspace: Sends the active card to the graveyard of the bound deck, if a deck is not bound the card is deleted.\n\
+A: Shuffle the active card into the bound deck, this action shuffles the bound deck.\n\
+B: Binds a deck \- this is a critical feature, all deck operations rely on a deck being bound. To bind a deck mouse over a deck (created with /new in the command window) and hit B.\n\
+C: Copy a card or deck, if you make a copy of a deck it will be full deck, not a copy of the cards remaining in the deck.\n\
+D: Draw a card to the game window from the bound deck.\n\
+F: Flip the active card face down, hitting F on a facedown card will turn it face up.\n\
+G: Grab the active card and put it into your hand, this is how you move cards from the game window to your hand window.\n\
+H: Draw a card to your hand window from the bound deck.\n\
+M: Send the active card to the bottom of the bound deck.\n\
+O: Reset the Z order of all fixed cards, this will allow them to be draggable again, used in conjunction with the P key.\n\
+P: Fix a card to the game window, this sets the Z order of the active card to -1 which puts it in the background and prevents the card from being dragged, used in conjunction with the O key.\n\
+S: Shuffle the bound deck.\n\
+T: Sends the active card to the top of the bound deck.\n\
+W: Draw a card from the bound deck to the game window facedown.\n\
+X: Swap cards, mouse over a card or deck and press X to mark it for swap, mouse over another deck or card and press X to swap the two selected elements.\n\
+Z: Decrease Z order of the active card or deck by 1, (Use Shift + Z to increase the Z order by 1), Z order won\'t go below 0.\n\
++: (Keypad) Increases the counter of the active card by 1. (Use with shift +5, Alt +20, Shift&Alt +100)\n\
+-: (Keypad) Decreases the counter of the active card by 1. (Use with shift -5, Alt -20, Shift&Alt -100)\n\
+\n\
+Hand Window commands\n\
+A: Shuffle the active card into the bound deck, this action shuffles the bound deck.\n\
+B: Send the active card to the board.\n\
+F: Send the active card to the board facedown.\n\
+M: Send the active card to the bottom of the bound deck.\n\
+T: Send the active card to the top of the bound deck.\n\
++: (Keypad) Increases the counter of the active card by 1. (Use with shift +5, Alt +20, Shift&Alt +100)\n\
+-: (Keypad) Decreases the counter of the active card by 1. (Use with shift -5, Alt -20, Shift&Alt -100)\n\
 '
-
 	HTMLText = HTMLText.replace(/\r?\n/g, '<br />');
 	cmdwnd.innerHTML = cmdwnd.innerHTML + "<br>" + HTMLText
 	ScrollToEndOfChatBox()
